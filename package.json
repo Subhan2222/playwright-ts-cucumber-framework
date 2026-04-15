@@ -1,0 +1,43 @@
+{
+  "name": "playwright-ts-cucumber-framework",
+  "version": "1.0.0",
+  "description": "This repository contains a Behavior‑Driven Development (BDD) test automation framework built with Playwright, TypeScript, and Cucumber (Gherkin). It is designed for end‑to‑end testing of modern web applications, supporting cross‑browser execution, CI/CD integration, and scalable test organization.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cucumber": "cucumber-js --require-module ts-node/register --config config/cucumber.config.ts",
+    "cucumber:secure": "npm run decrypt-env && npm run cucumber && npm run cleanup-env",
+    "report": "ts-node ./utils/scripts/generate-cucumber-report.ts",
+    "encrypt-env": "ts-node ./utils/scripts/encrypt-env.ts",
+    "decrypt-env": "ts-node ./utils/scripts/decrypt-env.ts",
+    "cleanup-env": "ts-node ./utils/scripts/cleanup-env.ts",
+    "allure:generate": "npx allure generate test-results/allure-results --clean -o test-results/allure-report",
+    "allure:open": "npx allure open test-results/allure-report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Subhan2222/playwright-ts-cucumber-framework.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Subhan2222/playwright-ts-cucumber-framework/issues"
+  },
+  "homepage": "https://github.com/Subhan2222/playwright-ts-cucumber-framework#readme",
+  "devDependencies": {
+    "@types/cucumber": "^6.0.1",
+    "@types/node": "^25.6.0",
+    "allure-commandline": "^2.38.1",
+    "allure-cucumberjs": "^3.7.1",
+    "cucumber-html-reporter": "^7.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2"
+  },
+  "dependencies": {
+    "@cucumber/cucumber": "^12.8.0",
+    "@playwright/test": "^1.59.1",
+    "dotenv": "^16.3.1",
+    "playwright": "^1.59.1"
+  }
+}
