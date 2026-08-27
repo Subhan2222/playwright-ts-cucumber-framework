@@ -12,7 +12,7 @@ if (!secret) {
 }
 
 const inputFile = process.argv[2] || 'data/envData/envUrls.json.enc';
-const outputFile = process.argv[3] || '.tmp/env.decrypted.json';
+const outputFile = process.argv[3] || 'data/envData/envUrls.json';
 
 const outputDir = path.dirname(outputFile);
 mkdirSync(outputDir, { recursive: true });

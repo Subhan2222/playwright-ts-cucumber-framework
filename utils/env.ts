@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import * as path from 'path';
 import crypto from 'crypto';
 import * as dotenv from 'dotenv';
@@ -40,6 +40,7 @@ export function decryptEnvFile(): void {
 
   try {
     const decryptedData = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+    mkdirSync(path.dirname(ENV_JSON_PATH), { recursive: true });
     writeFileSync(ENV_JSON_PATH, decryptedData);
     cachedEnv = null;
   } catch {
@@ -59,6 +60,7 @@ export function encryptEnvFile(): void {
   const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
   const encryptedData = Buffer.concat([cipher.update(plainText, 'utf8'), cipher.final()]);
 
+  mkdirSync(path.dirname(ENV_ENC_PATH), { recursive: true });
   writeFileSync(ENV_ENC_PATH, Buffer.concat([iv, encryptedData]));
   unlinkSync(ENV_JSON_PATH);
   cachedEnv = null;
