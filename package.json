@@ -10,7 +10,6 @@
     "report": "ts-node ./utils/scripts/generate-cucumber-report.ts",
     "encrypt-env": "ts-node ./utils/scripts/encrypt-env.ts",
     "decrypt-env": "ts-node ./utils/scripts/decrypt-env.ts",
-    "cleanup-env": "ts-node ./utils/scripts/cleanup-env.ts",
     "allure:generate": "npx allure generate test-results/allure-results --clean -o test-results/allure-report",
     "allure:open": "npx allure open test-results/allure-report"
   },

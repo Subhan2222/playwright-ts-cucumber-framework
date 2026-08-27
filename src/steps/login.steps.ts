@@ -8,7 +8,7 @@ Given('I open the login page', async function () {
 
 When('I enter valid credentials', async function () {
   const loginPage = new LoginPage((this as any).page);
-  await loginPage.login('user@example.com', 'Password123');
+  await loginPage.login('Admin', 'admin123');
 });
 
 Then('I should be logged in successfully', async function () {
