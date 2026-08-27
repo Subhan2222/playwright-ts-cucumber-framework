@@ -1,8 +1,0 @@
-{
-  "baseUrl": "https://example.com",
-  "loginPath": "/login",
-  "searchPath": "/search",
-  "dashboardPath": "/dashboard",
-  "profilePath": "/profile",
-  "logoutPath": "/logout"
-}

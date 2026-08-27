@@ -1,8 +1,26 @@
-import { Before, After, Status } from '@cucumber/cucumber';
+import { BeforeAll, AfterAll, Before, After, Status, setDefaultTimeout } from '@cucumber/cucumber';
 import { chromium, firefox, webkit, Browser, Page, BrowserType } from 'playwright';
 import * as dotenv from 'dotenv';
+import { decryptEnvFile, encryptEnvFile } from '../utils/env';
 
 dotenv.config();
+
+setDefaultTimeout(Number(process.env.TIMEOUT ?? 30000));
+
+function restoreEncryptedEnv() {
+  encryptEnvFile();
+}
+
+BeforeAll(function () {
+  decryptEnvFile();
+});
+
+AfterAll(function () {
+  restoreEncryptedEnv();
+});
+
+process.on('exit', restoreEncryptedEnv);
+
 
 const headless = process.env.HEADLESS?.toLowerCase() !== 'false';
 const browserName = (process.env.BROWSER ?? 'chromium').toLowerCase();

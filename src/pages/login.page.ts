@@ -5,7 +5,7 @@ export class LoginPage {
   private readonly usernameInput = 'input[name="username"]';
   private readonly passwordInput = 'input[name="password"]';
   private readonly submitButton = 'button[type="submit"]';
-  private readonly successBanner = 'text=Welcome';
+  private readonly dashboardHeading = 'h6:has-text("Dashboard")';
 
   constructor(private readonly page: Page) {}
 
@@ -21,6 +21,7 @@ export class LoginPage {
   }
 
   async isLoggedIn() {
-    return this.page.isVisible(this.successBanner);
+    await this.page.locator(this.dashboardHeading).waitFor({ state: 'visible', timeout: 5000 });
+    return true;
   }
 }

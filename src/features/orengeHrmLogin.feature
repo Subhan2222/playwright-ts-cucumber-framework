@@ -1,5 +1,6 @@
 Feature: Login
 
+  @test
   Scenario: Successful login
     Given I open the login page
     When I enter valid credentials
