@@ -11,7 +11,7 @@ if (!secret) {
   process.exit(1);
 }
 
-const inputFile = process.argv[2] || '.tmp/env.decrypted.json';
+const inputFile = process.argv[2] || 'data/envData/envUrls.json';
 const outputFile = process.argv[3] || 'data/envData/envUrls.json.enc';
 
 if (!existsSync(inputFile)) {

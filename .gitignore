@@ -1,30 +1,15 @@
 node_modules/
 .env
-reports/
 .tmp/
-envUrls.json
-
-# Test results
-test-results/
-allure-results/
-allure-report/
-
-# Temp decrypted env files
-.tmp/
-allure-results/
 data/envData/envUrls.json
-envUrls.json
 
-# Test results
+# Test reports and results
+reports/
 test-results/
 allure-results/
 allure-report/
 
-# Temp decrypted env files
-.tmp/
-
-.DS_Store
-**/.DS_Store
-
+# Other generated or local files
+envUrls.json
 .DS_Store
 **/.DS_Store
