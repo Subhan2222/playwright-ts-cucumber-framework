@@ -9,5 +9,6 @@
   "cucumberautocomplete.strictGherkinCompletion": true,
   "cucumberautocomplete.smartSnippets": true,
   "cucumberautocomplete.featureDefaultLanguage": "en",
-  "cucumberautocomplete.enableSnippets": true
+  "cucumberautocomplete.enableSnippets": true,
+  "chat.disableAIFeatures": false
 }

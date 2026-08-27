@@ -2,5 +2,29 @@ node_modules/
 .env
 reports/
 .tmp/
+envUrls.json
+
+# Test results
+test-results/
+allure-results/
+allure-report/
+
+# Temp decrypted env files
+.tmp/
 allure-results/
 data/envData/envUrls.json
+envUrls.json
+
+# Test results
+test-results/
+allure-results/
+allure-report/
+
+# Temp decrypted env files
+.tmp/
+
+.DS_Store
+**/.DS_Store
+
+.DS_Store
+**/.DS_Store

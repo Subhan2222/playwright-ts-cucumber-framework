@@ -1,6 +1,17 @@
 # playwright-ts-cucumber-framework
 This repository contains a Behavior‑Driven Development (BDD) test automation framework built with Playwright, TypeScript, and Cucumber (Gherkin).
 
+## Requirements
+- Node.js 18.x or 20.x
+- npm comes with Node.js
+- `ENV_SECRET` must be set to decrypt `env.json`
+
+## Recommended VS Code extensions
+- `ESLint`
+- `Prettier - Code formatter`
+- `Cucumber (Gherkin) Full Support`
+- `Playwright Test for VS Code`
+
 ## Setup
 1. Clone the repo:
    - `git clone <repo-url>`
@@ -12,17 +23,6 @@ This repository contains a Behavior‑Driven Development (BDD) test automation f
    - `npm run cucumber`
 5. Generate extended report:
    - `npm run report`
-
-## Requirements
-- Node.js 18.x or 20.x
-- npm comes with Node.js
-- `ENV_SECRET` must be set to decrypt `env.json`
-
-## Recommended VS Code extensions
-- `ESLint`
-- `Prettier - Code formatter`
-- `Cucumber (Gherkin) Full Support`
-- `Playwright Test for VS Code`
 
 ## Reports
 - `npm run cucumber` creates:
