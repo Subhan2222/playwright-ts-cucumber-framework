@@ -2,6 +2,7 @@ import { BeforeAll, AfterAll, Before, After, Status, setDefaultTimeout } from '@
 import { chromium, firefox, webkit, Browser, Page, BrowserType } from 'playwright';
 import * as dotenv from 'dotenv';
 import { decryptEnvFile, encryptEnvFile } from '../utils/env';
+import POManager from '../src/pages/POManager';
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ Before(async function () {
 
   (this as any).browser = browser;
   (this as any).page = page;
+  (this as any).pageManager = new POManager(page);
 });
 
 After(async function (scenario: any) {

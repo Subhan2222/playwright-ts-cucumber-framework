@@ -1,0 +1,19 @@
+{
+  "require": [
+    "support/hooks.ts",
+    "src/steps/**/*.ts"
+  ],
+  "require_module": "ts-node/register",
+  "format": [
+    "html:test-results/reports/cucumber-report.html",
+    "json:test-results/reports/cucumber-report.json",
+    "progress",
+    "allure-cucumberjs/reporter"
+  ],
+  "format_options": {
+    "resultsDir": "test-results/allure-results"
+  },
+  "paths": [
+    "src/features/**/*.feature"
+  ]
+}
