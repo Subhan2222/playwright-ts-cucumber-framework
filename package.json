@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "This repository contains a Behavior‑Driven Development (BDD) test automation framework built with Playwright, TypeScript, and Cucumber (Gherkin). It is designed for end‑to‑end testing of modern web applications, supporting cross‑browser execution, CI/CD integration, and scalable test organization.",
   "main": "index.js",
-  "scripts": {
+  "scripts": {  
     "test": "echo \"Error: no test specified\" && exit 1",
-    "cucumber": "cucumber-js --require-module ts-node/register --config config/cucumber.config.ts",
+    "smoke": "npm run cucumber -- --tags @smoke",
+    "regression": "npm run cucumber -- --tags @regression",
+    "cucumber": "cucumber-js",
     "cucumber:secure": "node ./utils/scripts/run-cucumber-secure.js",
     "report": "ts-node ./utils/scripts/generate-cucumber-report.ts",
     "encrypt-env": "ts-node ./utils/scripts/encrypt-env.ts",
