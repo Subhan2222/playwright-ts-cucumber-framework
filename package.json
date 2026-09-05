@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "smoke": "npm run cucumber -- --tags @smoke",
     "regression": "npm run cucumber -- --tags @regression",
-    "cucumber": "cucumber-js --require-module ts-node/register --config config/cucumber.config.ts",
+    "cucumber": "cucumber-js",
     "cucumber:secure": "node ./utils/scripts/run-cucumber-secure.js",
     "report": "ts-node ./utils/scripts/generate-cucumber-report.ts",
     "encrypt-env": "ts-node ./utils/scripts/encrypt-env.ts",
