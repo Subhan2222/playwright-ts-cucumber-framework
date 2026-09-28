@@ -1,288 +1,245 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { getEnvConfig } from '../../utils/env';
 
 class LoginPage {
-  private readonly SELECTORS = {
-    loginForm: 'form',
-    loginTitle: 'h1, h2, [class*="title"]',
-    companyBranding: '[class*="brand"], [class*="company"]',
-    orangeLogo: '[class*="logo"]',
-    usernameInput: 'input[name="username"]',
-    passwordInput: 'input[name="password"]',
-    submitButton: 'button[type="submit"]',
-    forgotPasswordLink: 'a[href*="forgot"], [class*="forgot"]',
-    demoCredentialsSection: '[class*="demo"], [class*="credentials"]',
-    applicationVersion: '[class*="version"], [class*="app"]',
-    copyrightInfo: '[class*="copy"], footer',
-    dashboardHeading: 'h6:has-text("Dashboard")',
-    errorMessage: '[class*="error"], [class*="alert"], [role="alert"]',
-    requiredValidation: '[class*="required"], [class*="validation"]',
-    linkedInIcon: '[class*="linkedin"], a[href*="linkedin"]',
-    facebookIcon: '[class*="facebook"], a[href*="facebook"]',
-    twitterIcon: '[class*="twitter"], a[href*="twitter"]',
-    youtubeIcon: '[class*="youtube"], a[href*="youtube"]',
-    form: 'form',
-    csrfToken: 'input[name*="csrf"], input[name*="token"]',
-    usernameLabel: 'label[for="username"]',
-    passwordLabel: 'label[for="password"]',
-  };
-
   private readonly page: Page;
+
+  readonly loginForm: Locator;
+  readonly loginTitle: Locator;
+  readonly companyBranding: Locator;
+  readonly orangeLogo: Locator;
+  readonly usernameInput: Locator;
+  readonly passwordInput: Locator;
+  readonly submitButton: Locator;
+  readonly forgotPasswordLink: Locator;
+  readonly demoCredentialsSection: Locator;
+  readonly applicationVersion: Locator;
+  readonly copyrightInfo: Locator;
+  readonly dashboardHeading: Locator;
+  readonly errorMessage: Locator;
+  readonly requiredValidation: Locator;
+  readonly linkedInIcon: Locator;
+  readonly facebookIcon: Locator;
+  readonly twitterIcon: Locator;
+  readonly youtubeIcon: Locator;
+  readonly form: Locator;
+  readonly csrfToken: Locator;
+  readonly usernameLabel: Locator;
+  readonly passwordLabel: Locator;
 
   constructor(page: Page) {
     this.page = page;
+
+    this.loginForm = page.locator('form');
+    this.form = page.locator('form');
+    this.submitButton = page.locator('button[type="submit"]');
+    this.forgotPasswordLink = page.locator('a[href*="forgot"], [class*="forgot"]');
+    this.dashboardHeading = page.locator('h6:has-text("Dashboard")');
+    this.errorMessage = page.locator('[class*="error"], [class*="alert"], [role="alert"]');
+    this.copyrightInfo = page.locator('footer');
+
+    this.linkedInIcon = page.locator('[class*="linkedin"], a[href*="linkedin"]');
+    this.facebookIcon = page.locator('[class*="facebook"], a[href*="facebook"]');
+    this.twitterIcon = page.locator('[class*="twitter"], a[href*="twitter"]');
+    this.youtubeIcon = page.locator('[class*="youtube"], a[href*="youtube"]');
+
+    this.usernameInput = page.locator('input[name="username"]');
+    this.passwordInput = page.locator('input[name="password"]');
+
+    this.loginTitle = page.locator('h1, h2, [class*="title"]');
+    this.usernameLabel = page.locator('label[for="username"]');
+    this.passwordLabel = page.locator('label[for="password"]');
+    this.requiredValidation = page.locator('[class*="required"], [class*="validation"]');
+
+    this.orangeLogo = page.locator('[class*="logo"]');
+    this.companyBranding = page.locator('[class*="brand"], [class*="company"]');
+    this.demoCredentialsSection = page.locator('[class*="demo"], [class*="credentials"]');
+    this.applicationVersion = page.locator('[class*="version"], [class*="app"]');
+    this.csrfToken = page.locator('input[name*="token"], input[name*="csrf"]');
   }
 
   public async goto(): Promise<void> {
+    const env = getEnvConfig();
+    const url = `${env.baseUrl}${env.loginPath}`;
+    await this.page.goto(url);
+  }
+
+  public async isLoginPageDisplayed(): Promise<void> {
     try {
-      const env = getEnvConfig();
-      const url = `${env.baseUrl}${env.loginPath}`;
-      await this.page.goto(url);
-    } catch (error) {
-      console.error('Error navigating to the login page:', error);
-      throw error;
+      await this.loginForm.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the login page is not displayed');
     }
   }
 
-  public async isLoginPageDisplayed(): Promise<boolean> {
+  public async isLoginTitleVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.loginForm, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-       console.error('Login form not visible within the timeout period.', error);
-      return false;
+      await this.loginTitle.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the Login title is not visible');
     }
   }
 
-  public async isLoginTitleVisible(): Promise<boolean> {
+  public async isCompanyBrandingVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.loginTitle, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('Login title not visible within the timeout period.', error);
-      return false;
+      await this.companyBranding.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the company branding image is not visible');
     }
   }
 
-  public async isCompanyBrandingVisible(): Promise<boolean> {
+  public async isOrangeHRMLogoVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.companyBranding, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('Company branding not visible within the timeout period.', error);
-      return false;
+      await this.orangeLogo.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the OrangeHRM logo is not visible');
     }
   }
 
-  public async isOrangeHRMLogoVisible(): Promise<boolean> {
+  public async isUsernameFieldVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.orangeLogo, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('Orange HRM logo not visible within the timeout period.', error);
-      return false;
+      await this.usernameInput.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the Username field is not visible');
     }
   }
 
-  public async isUsernameFieldVisible(): Promise<boolean> {
+  public async isPasswordFieldVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.usernameInput, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('Username field not visible within the timeout period.', error);
-      return false;
+      await this.passwordInput.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the Password field is not visible');
     }
   }
 
-  public async isPasswordFieldVisible(): Promise<boolean> {
+  public async isLoginButtonVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.passwordInput, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('Password field not visible within the timeout period.', error);
-      return false;
+      await this.submitButton.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the Login button is not visible');
     }
   }
 
-  public async isLoginButtonVisible(): Promise<boolean> {
+  public async isForgotPasswordLinkVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.submitButton, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('Login button not visible within the timeout period.', error);
-      return false;
+      await this.forgotPasswordLink.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the Forgot Password link is not visible');
     }
   }
 
-  public async isForgotPasswordLinkVisible(): Promise<boolean> {
+  public async isDemoCredentialsSectionVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.forgotPasswordLink, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('Forgot Password link not visible within the timeout period.', error);
-      return false;
+      await this.demoCredentialsSection.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the demo credentials section is not displayed');
     }
   }
 
-  public async isDemoCredentialsSectionVisible(): Promise<boolean> {
+  public async isApplicationVersionVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.demoCredentialsSection, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('Demo credentials section not visible within the timeout period.', error);
-      return false;
+      await this.applicationVersion.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the application version is not displayed');
     }
   }
 
-  public async isApplicationVersionVisible(): Promise<boolean> {
+  public async isCopyrightInfoVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.applicationVersion, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('Application version not visible within the timeout period.', error);
-      return false;
+      await this.copyrightInfo.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the copyright information is not displayed');
     }
   }
 
-  public async isCopyrightInfoVisible(): Promise<boolean> {
-    try {
-      await this.page.waitForSelector(this.SELECTORS.copyrightInfo, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('Copyright info not visible within the timeout period.', error);
-      return false;
-    }
-  }
-
-  // ==================== Field Properties ====================
   public async getUsernamePlaceholder(): Promise<string | null> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.usernameInput, { state: 'visible', timeout: 5000 });
-      return await this.page.getAttribute(this.SELECTORS.usernameInput, 'placeholder');
-    } catch (error) {
-      console.error('Username field not visible within the timeout period.', error);
+      return await this.usernameInput.getAttribute('placeholder');
+    } catch {
       return null;
     }
   }
 
   public async getPasswordPlaceholder(): Promise<string | null> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.passwordInput, { state: 'visible', timeout: 5000 });
-      return await this.page.getAttribute(this.SELECTORS.passwordInput, 'placeholder');
-    } catch (error) {
-      console.error('Password field not visible within the timeout period.', error);
+      return await this.passwordInput.getAttribute('placeholder');
+    } catch {
       return null;
     }
   }
 
   public async isUsernameFieldFocused(): Promise<boolean> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.usernameInput, { state: 'visible', timeout: 5000 });
-      return await this.page.evaluate(() =>
-        (document.activeElement as HTMLInputElement)?.name === 'username'
-      );
-    } catch (error) {
-      console.error('Username field not visible within the timeout period.', error);
+      await this.usernameInput.waitFor({ state: 'visible', timeout: 5000 });
+      return await this.page.evaluate(() => (document.activeElement as HTMLInputElement)?.name === 'username');
+    } catch {
       return false;
     }
   }
 
   public async getPasswordFieldType(): Promise<string | null> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.passwordInput, { state: 'visible', timeout: 5000 });
-      return await this.page.getAttribute(this.SELECTORS.passwordInput, 'type');
-    } catch (error) {
-      console.error('Password field not visible within the timeout period.', error);
+      return await this.passwordInput.getAttribute('type');
+    } catch {
       return null;
     }
   }
 
   public async getUsernameLabel(): Promise<string | null> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.usernameLabel, { state: 'visible', timeout: 5000 });
-      return await this.page.textContent(this.SELECTORS.usernameLabel);
-    } catch (error) {
-      console.error('Username label not visible within the timeout period.', error);
+      return await this.usernameLabel.textContent();
+    } catch {
       return null;
     }
   }
 
   public async getPasswordLabel(): Promise<string | null> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.passwordLabel, { state: 'visible', timeout: 5000 });
-      return await this.page.textContent(this.SELECTORS.passwordLabel);
-    } catch (error) {
-      console.error('Password label not visible within the timeout period.', error);
+      return await this.passwordLabel.textContent();
+    } catch {
       return null;
     }
   }
 
-  // ==================== Login Actions ====================
   public async enterUsername(username: string): Promise<void> {
-    try {
-      await this.page.fill(this.SELECTORS.usernameInput, username);
-    } catch (error) {
-      console.error('Error entering username:', error);
-      throw error;
-    }
+    await this.usernameInput.fill(username);
   }
 
   public async enterPassword(password: string): Promise<void> {
-    try {
-      await this.page.fill(this.SELECTORS.passwordInput, password);
-    } catch (error) {
-      console.error('Error entering password:', error);
-      throw error;
-    }
+    await this.passwordInput.fill(password);
   }
 
   public async clickLoginButton(): Promise<void> {
-    try {
-      await this.page.click(this.SELECTORS.submitButton);
-    } catch (error) {
-      console.error('Error clicking login button:', error);
-      throw error;
-    }
+    await this.submitButton.click();
   }
 
   public async isLoggedIn(): Promise<boolean> {
     try {
-      await this.page.locator(this.SELECTORS.dashboardHeading).waitFor({ state: 'visible', timeout: 5000 });
+      await this.dashboardHeading.waitFor({ state: 'visible', timeout: 5000 });
       return true;
     } catch {
       return false;
     }
   }
 
-  // ==================== Error and Validation ====================
-  public async isErrorMessageDisplayed(): Promise<boolean> {
+  public async isErrorMessageDisplayed(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.errorMessage, { state: 'visible', timeout: 5000 });
-      return true;
+      await this.errorMessage.isVisible({ timeout: 5000 });
     } catch {
-      console.error('Error message not visible within the timeout period.');
-      return false;
+      console.error('the invalid credentials error message is not displayed');
     }
   }
 
-  public async isRequiredValidationDisplayed(): Promise<boolean> {
+  public async isRequiredValidationDisplayed(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.requiredValidation, { state: 'visible', timeout: 5000 });
-      return true;
+      await this.requiredValidation.isVisible({ timeout: 5000 });
     } catch {
-      console.error('Required validation not visible within the timeout period.');
-      return false;
+      console.error('the required validation message is not displayed');
     }
   }
 
-  // ==================== Navigation Actions ====================
   public async clickForgotPasswordLink(): Promise<void> {
-    try {
-      await this.page.click(this.SELECTORS.forgotPasswordLink);
-    } catch (error) {
-      console.error('Error clicking forgot password link:', error);
-      throw error;
-    }
+    await this.forgotPasswordLink.click();
   }
 
   public async isForgotPasswordPageLoaded(): Promise<boolean> {
@@ -294,93 +251,78 @@ class LoginPage {
     }
   }
 
-  // ==================== Keyboard Accessibility ====================
   public async pressTab(): Promise<void> {
-    try {
-      await this.page.press('body', 'Tab');
-    } catch (error) {
-      console.error('Error pressing Tab:', error);
-      throw error;
-    }
+    await this.page.press('body', 'Tab');
   }
 
   public async isPasswordFieldFocused(): Promise<boolean> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.passwordInput, { state: 'visible', timeout: 5000 });
-      return await this.page.evaluate(() =>
-        (document.activeElement as HTMLInputElement)?.name === 'password'
-      );
-    } catch (error) {
-      console.error('Password field not visible within the timeout period.', error);
+      await this.passwordInput.waitFor({ state: 'visible', timeout: 5000 });
+      return await this.page.evaluate(() => (document.activeElement as HTMLInputElement)?.name === 'password');
+    } catch {
       return false;
     }
   }
 
   public async isLoginButtonFocused(): Promise<boolean> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.submitButton, { state: 'visible', timeout: 5000 });
-      return await this.page.evaluate(() =>
-        (document.activeElement as HTMLButtonElement)?.type === 'submit'
-      );
-    } catch (error) {
-      console.error('Login button not visible within the timeout period.', error);
+      await this.submitButton.waitFor({ state: 'visible', timeout: 5000 });
+      return await this.page.evaluate(() => (document.activeElement as HTMLButtonElement)?.type === 'submit');
+    } catch {
       return false;
     }
   }
 
   public async pressEnterOnPasswordField(): Promise<void> {
-    await this.page.press(this.SELECTORS.passwordInput, 'Enter');
+    await this.passwordInput.press('Enter');
   }
 
-  // ==================== Social Media ====================
-  public async isLinkedInIconVisible(): Promise<boolean> {
+  public async isLinkedInIconVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.linkedInIcon, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('LinkedIn icon not visible within the timeout period.', error);
-      return false;
+      await this.linkedInIcon.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the LinkedIn icon is not displayed');
     }
   }
 
-  public async isFacebookIconVisible(): Promise<boolean> {
+  public async isFacebookIconVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.facebookIcon, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('Facebook icon not visible within the timeout period.', error);
-      return false;
+      await this.facebookIcon.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the Facebook icon is not displayed');
     }
   }
 
-  public async isTwitterIconVisible(): Promise<boolean> {
+  public async isTwitterIconVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.twitterIcon, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('Twitter icon not visible within the timeout period.', error);
-      return false;
+      await this.twitterIcon.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the Twitter icon is not displayed');
     }
   }
 
-  public async isYouTubeIconVisible(): Promise<boolean> {
+  public async isYouTubeIconVisible(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.youtubeIcon, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('YouTube icon not visible within the timeout period.', error);
-      return false;
+      await this.youtubeIcon.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the YouTube icon is not displayed');
     }
   }
 
   public async clickSocialMediaIcon(socialMedia: string): Promise<void> {
-    try {
-      const selector = this.SELECTORS[`${socialMedia.toLowerCase()}Icon` as keyof typeof this.SELECTORS];
-      await this.page.click(selector);
-    } catch (error) {
-      console.error(`Error clicking ${socialMedia} icon:`, error);
-      throw error;
+    const selectorMap: Record<string, Locator> = {
+      linkedin: this.linkedInIcon,
+      facebook: this.facebookIcon,
+      twitter: this.twitterIcon,
+      youtube: this.youtubeIcon,
+    };
+
+    const target = selectorMap[socialMedia.trim().toLowerCase()];
+    if (!target) {
+      throw new Error(`Unsupported social media icon: ${socialMedia}`);
     }
+
+    await target.click();
   }
 
   public async isNewTabOpened(): Promise<boolean> {
@@ -389,78 +331,63 @@ class LoginPage {
       const newPage = await context.waitForEvent('page', { timeout: 5000 });
       await newPage.close();
       return true;
-    } catch (error) {
-      console.error('Error occurred while waiting for new tab:', error);
+    } catch {
       return false;
     }
   }
 
-  // ==================== Form Security ====================
   public async getFormMethod(): Promise<string | null> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.form, { state: 'visible', timeout: 5000 });
-      return await this.page.getAttribute(this.SELECTORS.form, 'method');
-    } catch (error) {
-      console.error('Form not visible within the timeout period.', error);
+      return await this.form.getAttribute('method');
+    } catch {
       return null;
     }
   }
 
   public async getFormAction(): Promise<string | null> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.form, { state: 'visible', timeout: 5000 });
-      return await this.page.getAttribute(this.SELECTORS.form, 'action');
-    } catch (error) {
-      console.error('Form not visible within the timeout period.', error);
+      return await this.form.getAttribute('action');
+    } catch {
       return null;
     }
   }
 
-  public async isCSRFTokenPresent(): Promise<boolean> {
+  public async isCSRFTokenPresent(): Promise<void> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.csrfToken, { state: 'visible', timeout: 5000 });
-      return true;
-    } catch (error) {
-      console.error('CSRF token not visible within the timeout period.', error);
-      return false;
+      await this.csrfToken.isVisible({ timeout: 5000 });
+    } catch {
+      console.error('the CSRF token is not present');
     }
   }
 
   public async isPasswordFieldMasked(): Promise<boolean> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.passwordInput, { state: 'visible', timeout: 5000 });
-      const fieldType = await this.page.getAttribute(this.SELECTORS.passwordInput, 'type');
-      return fieldType === 'password';
-    } catch (error) {
-      console.error('Password field not visible within the timeout period.', error);
+      const type = await this.passwordInput.getAttribute('type');
+      return type === 'password';
+    } catch {
       return false;
     }
   }
 
-  // ==================== Accessibility ====================
   public async getCompanyBrandingAltText(): Promise<string | null> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.companyBranding, { state: 'visible', timeout: 5000 });
-      return await this.page.getAttribute(this.SELECTORS.companyBranding, 'alt');
-    } catch (error) {
-      console.error('Company branding not visible within the timeout period.', error);
+      return await this.companyBranding.getAttribute('alt');
+    } catch {
       return null;
     }
   }
 
   public async getLogoAltText(): Promise<string | null> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.orangeLogo, { state: 'visible', timeout: 5000 });
-      return await this.page.getAttribute(this.SELECTORS.orangeLogo, 'alt');
-    } catch (error) {
-      console.error('Logo not visible within the timeout period.', error);
+      return await this.orangeLogo.getAttribute('alt');
+    } catch {
       return null;
     }
   }
 
   public async areAllElementsKeyboardAccessible(): Promise<boolean> {
     try {
-      await this.page.waitForSelector(this.SELECTORS.form, { state: 'visible', timeout: 5000 });
+      await this.form.waitFor({ state: 'visible', timeout: 5000 });
       return await this.page.evaluate(() => {
         const buttons = document.querySelectorAll('button, a, input');
         let allAccessible = true;
@@ -472,8 +399,7 @@ class LoginPage {
         });
         return allAccessible;
       });
-    } catch (error) {
-      console.error('Form not visible within the timeout period.', error);
+    } catch {
       return false;
     }
   }
