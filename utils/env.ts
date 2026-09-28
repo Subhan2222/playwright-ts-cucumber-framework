@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import * as path from 'path';
 import crypto from 'crypto';
 import * as dotenv from 'dotenv';
@@ -40,29 +40,26 @@ export function decryptEnvFile(): void {
 
   try {
     const decryptedData = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
-    mkdirSync(path.dirname(ENV_JSON_PATH), { recursive: true });
-    writeFileSync(ENV_JSON_PATH, decryptedData);
-    cachedEnv = null;
+    cachedEnv = JSON.parse(decryptedData.toString('utf8')) as EnvConfig;
   } catch {
     throw new Error('Failed to decrypt envUrls.json.enc. Check that ENV_SECRET matches the key used to encrypt it.');
   }
 }
 
 export function encryptEnvFile(): void {
-  if (!existsSync(ENV_JSON_PATH)) {
+  const secret = getSecret();
+  const plainText = cachedEnv ? JSON.stringify(cachedEnv, null, 2) : (existsSync(ENV_JSON_PATH) ? readFileSync(ENV_JSON_PATH, 'utf8') : '');
+
+  if (!plainText) {
     return;
   }
 
-  const secret = getSecret();
-  const plainText = readFileSync(ENV_JSON_PATH, 'utf8');
   const iv = crypto.randomBytes(16);
   const key = crypto.createHash('sha256').update(secret).digest();
   const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
   const encryptedData = Buffer.concat([cipher.update(plainText, 'utf8'), cipher.final()]);
 
-  mkdirSync(path.dirname(ENV_ENC_PATH), { recursive: true });
   writeFileSync(ENV_ENC_PATH, Buffer.concat([iv, encryptedData]));
-  unlinkSync(ENV_JSON_PATH);
   cachedEnv = null;
 }
 
@@ -71,10 +68,16 @@ export function getEnvConfig(): EnvConfig {
     return cachedEnv;
   }
 
-  if (!existsSync(ENV_JSON_PATH)) {
-    throw new Error(`Decrypted env file not found at ${ENV_JSON_PATH}`);
+  if (existsSync(ENV_JSON_PATH)) {
+    cachedEnv = JSON.parse(readFileSync(ENV_JSON_PATH, 'utf8')) as EnvConfig;
+    return cachedEnv;
   }
 
-  cachedEnv = JSON.parse(readFileSync(ENV_JSON_PATH, 'utf8')) as EnvConfig;
+  decryptEnvFile();
+
+  if (!cachedEnv) {
+    throw new Error('Environment configuration could not be loaded.');
+  }
+
   return cachedEnv;
 }

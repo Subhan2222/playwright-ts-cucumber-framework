@@ -1,118 +1,90 @@
-import {
-  BeforeAll,
-  AfterAll,
-  Before,
-  After,
-  BeforeStep,
-  AfterStep,
-  Status,
-} from '@cucumber/cucumber';
-import { chromium, firefox, webkit, Browser, Page, BrowserType } from 'playwright';
+import { BeforeAll, AfterAll, Before, After, BeforeStep, AfterStep, Status } from '@cucumber/cucumber';
+import { chromium, firefox, webkit, Browser, BrowserType } from 'playwright';
 import * as dotenv from 'dotenv';
-import { decryptEnvFile, encryptEnvFile } from '../utils/env';
+import { decryptEnvFile } from '../utils/env';
 import POManager from '../src/pages/POManager';
 import { setDefaultTimeout } from '@cucumber/cucumber';
 
 setDefaultTimeout(Number(process.env.TIMEOUT ?? 60000));
-
 dotenv.config();
-
-function restoreEncryptedEnv() {
-  encryptEnvFile();
-}
-
-BeforeAll(function () {
-  console.log(`[Run] START | browser=${browserName} | headless=${headless}`);
-  decryptEnvFile();
-  console.log('[Run] Environment loaded');
-});
-
-AfterAll(function () {
-  console.log('[Run] FINISHED');
-  restoreEncryptedEnv();
-  console.log('[Run] Environment restored');
-});
-
-process.on('exit', restoreEncryptedEnv);
-
 
 const headless = process.env.HEADLESS?.toLowerCase() !== 'false';
 const browserName = (process.env.BROWSER ?? 'chromium').toLowerCase();
-
 const browserType: BrowserType<Browser> =
-  browserName === 'firefox'
-    ? firefox
-    : browserName === 'webkit'
-    ? webkit
-    : chromium;
+    browserName === 'firefox' ? firefox :
+    browserName === 'webkit' ? webkit : chromium;
 
-Before(async function ({ pickle }) {
-  (this as any).scenarioStartedAt = Date.now();
-  console.log(`[Scenario] START | ${pickle.name}`);
+let globalBrowser: Browser;
 
-  const browser: Browser = await browserType.launch({ headless });
-  const page: Page = await browser.newPage();
+BeforeAll(async function () {
+    decryptEnvFile();
+    globalBrowser = await browserType.launch({
+        headless,
+        args: ['--disable-dev-shm-usage', '--no-sandbox']
+    });
+});
 
-  page.on('console', (message) => {
-    if (message.type() === 'error' || message.type() === 'warning') {
-      console.warn(`[Browser console.${message.type()}] ${message.text()}`);
+AfterAll(async function () {
+    if (globalBrowser) {
+        await globalBrowser.close();
     }
-  });
-  page.on('pageerror', (error) => {
-    console.error(`[Browser page error] ${error.message}`);
-  });
-  page.on('requestfailed', (request) => {
-    console.error(
-      `[Browser request failed] ${request.method()} ${request.url()} | ${request.failure()?.errorText ?? 'unknown error'}`,
-    );
-  });
+});
 
-  (this as any).browser = browser;
-  (this as any).page = page;
-  (this as any).pageManager = new POManager(page);
-  console.log(`[Scenario] Browser ready | ${browserName}`);
+Before(async function (this: any) {
+    this.context = await globalBrowser.newContext({
+        viewport: { width: 1280, height: 720 },
+        ignoreHTTPSErrors: true
+    });
+
+    await this.context.tracing.start({ screenshots: true, snapshots: true, sources: true });
+
+    this.page = await this.context.newPage();
+
+    this.pageManager = new POManager(this.page);
+});
+
+After(async function (this: any, scenario: any) {
+    const status = scenario.result?.status ?? Status.UNKNOWN;
+
+    if (status === Status.FAILED) {
+        const errorMessage = scenario.result?.message ?? 'No error message returned';
+        await this.attach(errorMessage, 'text/plain');
+
+        if (this.page && this.context) {
+            try {
+                const screenshot = await this.page.screenshot({ fullPage: true });
+                await this.attach(screenshot, 'image/png');
+
+                const traceBuffer = await this.context.tracing.stop({ stdout: false });
+                if (traceBuffer) {
+                    await this.attach(traceBuffer, 'application/zip');
+                }
+            } catch (artifactError) {
+                console.error('[Scenario Artifacts] Failed to construct triage packages');
+            }
+        }
+    } else if (this.context) {
+        await this.context.tracing.stop();
+    }
+
+    if (this.page) await this.page.close();
+    if (this.context) await this.context.close();
 });
 
 BeforeStep(function ({ pickleStep }) {
-  console.log(`[Step] START | ${pickleStep.text}`);
+    console.log(`[STEP START] ${pickleStep.text}`);
 });
 
 AfterStep(function ({ pickleStep, result }) {
-  const duration = result.duration
-    ? `${result.duration.seconds}s ${result.duration.nanos}ns`
-    : 'unknown duration';
-  console.log(`[Step] ${result.status} | ${pickleStep.text} | ${duration}`);
-});
+    const rawMessage = result?.exception?.message ?? result?.message ?? 'Step failed';
+    const cleanMessage = String(rawMessage).split('\n')[0].trim();
 
-After(async function (scenario: any) {
-  const world = this as any;
-  const duration = world.scenarioStartedAt
-    ? `${Date.now() - world.scenarioStartedAt}ms`
-    : 'unknown duration';
-  const status = scenario.result?.status ?? Status.UNKNOWN;
-
-  console.log(`[Scenario] ${status} | ${scenario.pickle?.name ?? 'unknown'} | ${duration}`);
-
-  if (status === Status.FAILED) {
-    const errorMessage = scenario.result?.message ?? 'No error message was provided';
-    console.error(`[Error] ${errorMessage}`);
-    await world.attach(errorMessage, 'text/plain');
-
-    if (world.page) {
-      try {
-        console.log('[Scenario] Capturing failure screenshot');
-        const screenshot = await world.page.screenshot({ fullPage: true });
-        await world.attach(screenshot, 'image/png');
-        console.log('[Scenario] Failure screenshot attached');
-      } catch (error) {
-        console.error('[Scenario] Failed to capture screenshot', error);
-      }
-    } else {
-      console.warn('[Scenario] No page available for failure screenshot');
+    if (result.status === Status.PASSED) {
+        console.log(`[STEP PASS] ${pickleStep.text}`);
+        return;
     }
-  }
 
-  await world.page?.close();
-  await world.browser?.close();
-  console.log('[Scenario] Browser resources closed');
+    if (result.status === Status.FAILED) {
+        console.error(`[STEP FAIL] ${pickleStep.text} :: ${cleanMessage}`);
+    }
 });
