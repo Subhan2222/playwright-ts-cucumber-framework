@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { getEnvConfig } from '../../utils/env';
+import { getEnvConfig } from '../../utils/envConfig';
 import { expect } from '@playwright/test';
 
 class dashboardPage {

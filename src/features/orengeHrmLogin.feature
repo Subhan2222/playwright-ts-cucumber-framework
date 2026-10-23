@@ -29,8 +29,7 @@ Feature: OrangeHRM Login Page
 
   @PositiveLogin @smoke
   Scenario: LOGIN-03 Verify successful login with valid credentials
-    When the user enters username "Admin"
-    And the user enters password "admin123"
+    Given the user logs in with credentials for user ID "1"
     And clicks on Login button
     Then the user should be redirected to Dashboard page
 
@@ -76,8 +75,7 @@ Feature: OrangeHRM Login Page
 
   @Keyboard
   Scenario: LOGIN-08 Verify login using Enter key
-    When the user enters username "Admin"
-    And the user enters password "admin123"
+    Given the user logs in with credentials for user ID "1"
     And presses Enter key
     Then the user should be redirected to Dashboard page
 
