@@ -1,7 +1,7 @@
 import { BeforeAll, AfterAll, Before, After, BeforeStep, AfterStep, Status } from '@cucumber/cucumber';
 import { chromium, firefox, webkit, Browser, BrowserType } from 'playwright';
 import * as dotenv from 'dotenv';
-import { decryptEnvFile } from '../utils/env';
+import { decryptEnvFile } from '../utils/envConfig';
 import POManager from '../src/pages/POManager';
 import { setDefaultTimeout } from '@cucumber/cucumber';
 
@@ -17,7 +17,7 @@ const browserType: BrowserType<Browser> =
 let globalBrowser: Browser;
 
 BeforeAll(async function () {
-    decryptEnvFile();
+    await decryptEnvFile();
     globalBrowser = await browserType.launch({
         headless,
         args: ['--disable-dev-shm-usage', '--no-sandbox']

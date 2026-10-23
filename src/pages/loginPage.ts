@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { getEnvConfig } from '../../utils/env';
+import { getEnvConfig } from '../../utils/envConfig';
 
 class LoginPage {
   private readonly page: Page;
@@ -58,11 +58,6 @@ class LoginPage {
     this.csrfToken = page.locator('input[name*="token"], input[name*="csrf"]');
   }
 
-  public async goto(): Promise<void> {
-    const env = getEnvConfig();
-    const url = `${env.baseUrl}${env.loginPath}`;
-    await this.page.goto(url);
-  }
 
   public async isLoginPageDisplayed(): Promise<void> {
     try {
