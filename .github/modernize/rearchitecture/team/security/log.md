@@ -11,3 +11,9 @@
 - Found that Cucumber logs raw step/error text before the limited diagnostic redactor, custom telemetry can hang because emission is awaited without its own deadline, and scenario memory has per-scope but not global bounds with lazy TTL cleanup.
 - `npm test` passed 5/5, `npm run build` passed, and `npm audit --json` reported 0 vulnerabilities across 141 dependencies.
 - Learnings consumed: [security/tls-validation-in-test-automation, backend/agentic-testing-foundation, architect/agentic-testing-boundaries]
+
+## [t7.2] Reviewed POM capability policy boundary
+- Security-review agent found no issue in the scoped capability: fixed read-only actions, separate opt-ins, explicit allowlist, bounded inputs/calls, scenario closure, generic failures, and no raw Page/World to runtime factory.
+- Ran the current complete deterministic suite (18/18) and TypeScript build successfully; browser-backed Cucumber coverage remains unavailable without an approved target and credentials.
+- Kept this review restricted to the new capability; legacy TLS/logging issues and future provider adapters were not reassessed.
+- Learnings consumed: [security/agentic-data-boundaries, security/tls-validation-in-test-automation]
