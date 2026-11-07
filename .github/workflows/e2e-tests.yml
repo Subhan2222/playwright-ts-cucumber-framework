@@ -1,0 +1,45 @@
+name: E2E tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cucumber:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Cucumber tests
+        run: npm run cucumber
+        env:
+          ENV_SECRET: ${{ secrets.ENV_SECRET }}
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-test-reports
+          path: |
+            test-results/reports/
+            test-results/allure-results/
+          if-no-files-found: warn
