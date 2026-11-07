@@ -18,3 +18,10 @@
 - Debugging dead-ends and what actually worked: TypeScript did not narrow an optional manager through a separately invoked `never` helper; direct throw branches provided clean strict-mode narrowing.
 - Techniques/patterns worth reusing: keep trusted Page Object closures private, expose fixed discriminated actions, increment budgets before async dispatch, and verify both that runtime scopes exclude raw objects and that no capability is supplied by default.
 - Learnings consumed: [backend/agentic-testing-foundation, security/agentic-data-boundaries, security/tls-validation-in-test-automation, architect/agentic-testing-boundaries]
+
+## [t7.3.1] Corrected menu-hidden observation false-positive
+- Codebase/domain discoveries: the menu locator used the literal accessible name `menuOption`, while the DashboardMenu feature enumerates twelve actual menu labels; an empty count could therefore report hidden even while Admin was visible.
+- Wrong assumptions and corrections: absence of a match is not proof of hidden state; the dashboard must expose the full known menu set and every item must be invisible before the observation returns true.
+- Debugging dead-ends and what actually worked: deterministic locator doubles can cover visible, fully hidden, absent, and partial menu states through both the POM helper and scenario capability without launching an external browser.
+- Techniques/patterns worth reusing: query known role links with `includeHidden: true`, require the whole expected set, and have existing assertions delegate to the same observation to prevent behavior drift.
+- Learnings consumed: [backend/agentic-testing-foundation]

@@ -18,6 +18,7 @@ import './orchestrator-guardrails.test';
 import './cucumber-opt-in.test';
 import './memory-telemetry.test';
 import './pom-capability.test';
+import './pom-page-object.test';
 
 const policy: AgentPolicy = {
   enabled: true,

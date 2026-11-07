@@ -14,7 +14,10 @@ Give agents only registered skill plans, enforce policies in orchestration, and 
 
 For optional browser capabilities, expose framework-owned typed operations through a closure-backed facade, require a separate explicit action allowlist, and enforce limits before dispatch. Do not pass Playwright or manager objects into the runtime; use no-log observation methods and generic failure responses at the boundary.
 
+For menu-hidden observations, use the known menu labels from the feature as the expected set, query hidden role links explicitly, and report hidden only when the complete set is present and every item is invisible. Reuse that same fail-closed observation in legacy assertions and optional capabilities so the two paths cannot disagree.
+
 ## History
 
 - 2026-11-07 (`playwright-ts-cucumber-framework/t2`): initial
 - 2026-11-07 (`playwright-ts-cucumber-framework/t7.1`): documented policy-checked read-only POM capability boundary
+- 2026-11-07 (`playwright-ts-cucumber-framework/t7.3.1`): documented fail-closed menu-hidden observation semantics

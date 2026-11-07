@@ -2,6 +2,24 @@ import type { Locator, Page } from '@playwright/test';
 import { getEnvConfig } from '../../utils/envConfig';
 import { expect } from '@playwright/test';
 
+const DASHBOARD_MENU_OPTIONS = [
+    'Admin',
+    'PIM',
+    'Leave',
+    'Time',
+    'Recruitment',
+    'My Info',
+    'Performance',
+    'Dashboard',
+    'Directory',
+    'Maintenance',
+    'Claim',
+    'Buzz',
+] as const;
+
+const DASHBOARD_MENU_OPTIONS_PATTERN =
+    /^(Admin|PIM|Leave|Time|Recruitment|My Info|Performance|Dashboard|Directory|Maintenance|Claim|Buzz)$/;
+
 class dashboardPage {
     private page: Page;
 
@@ -14,7 +32,7 @@ class dashboardPage {
 
         this.SearchField = page.getByPlaceholder('Search');
         this.HideButton = page.locator('//button[@class="oxd-icon-button oxd-main-menu-button"]');
-        this.MenuOptions = page.getByRole('link', { name: 'menuOption', exact: true });
+        this.MenuOptions = page.getByRole('link', { name: DASHBOARD_MENU_OPTIONS_PATTERN });
     }
 
     /** Read-only observation helpers for the optional, policy-checked POM facade. */
@@ -27,7 +45,28 @@ class dashboardPage {
     }
 
     public async isMenuHidden(): Promise<boolean> {
-        return (await this.MenuOptions.count()) === 0;
+        const observedVisibility = await Promise.all(
+            DASHBOARD_MENU_OPTIONS.map(async (menuOption) => {
+                const menuOptionLocator = this.page.getByRole('link', {
+                    name: menuOption,
+                    exact: true,
+                    includeHidden: true,
+                });
+                if ((await menuOptionLocator.count()) === 0) {
+                    return undefined;
+                }
+                return menuOptionLocator.isVisible();
+            })
+        );
+        const renderedMenuVisibility = observedVisibility.filter(
+            (isVisible): isVisible is boolean => isVisible !== undefined
+        );
+
+        // A missing or partial match set is not evidence that the dashboard
+        // menu is hidden: it can also mean the page is not ready or a locator
+        // no longer matches the known menu.
+        return renderedMenuVisibility.length === DASHBOARD_MENU_OPTIONS.length
+            && renderedMenuVisibility.every((isVisible) => !isVisible);
     }
 
     public async searchForItem(searchItem: string): Promise<void> {
@@ -71,7 +110,7 @@ class dashboardPage {
 
     public async verifyMenuHidden(): Promise<void> {
         try {
-            await expect(this.MenuOptions).toHaveCount(0);
+            await expect.poll(() => this.isMenuHidden()).toBe(true);
         } catch (error) {
             console.error(`Error verifying that the dashboard menu is hidden: ${error}`);
             throw error;
