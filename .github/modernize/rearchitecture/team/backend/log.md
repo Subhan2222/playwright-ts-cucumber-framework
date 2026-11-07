@@ -25,3 +25,10 @@
 - Debugging dead-ends and what actually worked: deterministic locator doubles can cover visible, fully hidden, absent, and partial menu states through both the POM helper and scenario capability without launching an external browser.
 - Techniques/patterns worth reusing: query known role links with `includeHidden: true`, require the whole expected set, and have existing assertions delegate to the same observation to prevent behavior drift.
 - Learnings consumed: [backend/agentic-testing-foundation]
+
+## [t7.5] Added named agents, skill wrappers, and file memory
+- Codebase/domain discoveries: Existing agent plans already execute only registered skills through an orchestrator; named agents can safely bind fixed skill IDs and use the injected provider only when supplied. Existing test runner aggregates imported `node:test` files from `foundation.test.ts`.
+- Wrong assumptions and corrections: Abstract contracts alone did not satisfy the requested named layers; adding fixed class bindings, concrete typed read-only wrappers, and a file-backed CRUD adapter made the foundation directly usable without wiring it into hooks.
+- Debugging dead-ends and what actually worked: Strict compilation caught a misplaced helper while developing the memory adapter; keeping it inside the adapter class and using same-directory temp files plus rename passed the full test/build checks.
+- Techniques/patterns worth reusing: Keep skill IDs compile-time fixed, parse policies with bounded allowlists, make storage paths explicit, hash scope IDs, expire entries, bound JSON/value/count sizes, serialize in-process operations, and document that local atomic files are not a multi-process database.
+- Learnings consumed: [backend/agentic-testing-foundation, architect/agentic-testing-boundaries, security/agentic-data-boundaries]

@@ -19,6 +19,7 @@ import './cucumber-opt-in.test';
 import './memory-telemetry.test';
 import './pom-capability.test';
 import './pom-page-object.test';
+import './named-agents-skills-memory.test';
 
 const policy: AgentPolicy = {
   enabled: true,

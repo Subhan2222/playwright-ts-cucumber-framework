@@ -16,8 +16,11 @@ For optional browser capabilities, expose framework-owned typed operations throu
 
 For menu-hidden observations, use the known menu labels from the feature as the expected set, query hidden role links explicitly, and report hidden only when the complete set is present and every item is invisible. Reuse that same fail-closed observation in legacy assertions and optional capabilities so the two paths cannot disagree.
 
+Named agents should bind fixed skill IDs and call a provider only through the injected `ModelProvider`; skills should be typed, bounded, and reviewed at their concrete port boundary. File-backed memory can use hashed scoped filenames, TTL, size/count limits, restrictive temp files, same-directory atomic rename, and in-process serialization, but it is not encrypted or safe as a shared multi-process database.
+
 ## History
 
 - 2026-11-07 (`playwright-ts-cucumber-framework/t2`): initial
 - 2026-11-07 (`playwright-ts-cucumber-framework/t7.1`): documented policy-checked read-only POM capability boundary
 - 2026-11-07 (`playwright-ts-cucumber-framework/t7.3.1`): documented fail-closed menu-hidden observation semantics
+- 2026-11-07 (`playwright-ts-cucumber-framework/t7.5`): recorded fixed named-agent bindings and bounded single-process file memory
