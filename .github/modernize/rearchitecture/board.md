@@ -13,12 +13,12 @@
 - ✅ t2 [backend] Implement the typed agentic testing foundation and concise integration documentation (06:32:16Z→06:41:54Z, 9m 38s) [deps: t1]
 - ✅ t3 [backend] Scan and remediate dependency vulnerabilities via the cve-remediation skill (06:49:41Z→06:54:26Z, 4m 45s) [deps: t2]
 
-### Phase: Review
+### Phase: Review 📌 776d1cf
 - ✅ t4 [security] Audit provider, retrieval, memory, and telemetry safety boundaries (retry 06:58:21Z→07:02:43Z, 4m 22s; initial attempt partial) [deps: t3]
 - ✅ t5 [architect] Smoke-test the project build and startup path (06:55:26Z→06:57:45Z, 2m 19s) [deps: t3]
 
 ### Phase: Runtime Validation
-- ⏳ t6 [tester] Validate legacy behavior and new opt-in framework flows [deps: t4, t5]
+- ✅ t6 [tester] Validate legacy behavior and new opt-in framework flows (07:03:13Z→07:07:33Z, 4m 20s; external browser scenarios unverified) [deps: t4, t5]
 
 ### Phase: Conformance
 - ⏳ t7 [teamlead] Verify requested deliverables and validation evidence [deps: t6]
