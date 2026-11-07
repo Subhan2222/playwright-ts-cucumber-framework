@@ -17,3 +17,9 @@
 - Ran the current complete deterministic suite (18/18) and TypeScript build successfully; browser-backed Cucumber coverage remains unavailable without an approved target and credentials.
 - Kept this review restricted to the new capability; legacy TLS/logging issues and future provider adapters were not reassessed.
 - Learnings consumed: [security/agentic-data-boundaries, security/tls-validation-in-test-automation]
+
+## [t7.5.1] Reviewed memory, policy loading, and agent/skill boundaries
+- Scoped security-review agent found no confirmed vulnerability in the t7.5 memory/policy/config/agent/skill additions; no source files were changed.
+- The review agent verified `npm test` (26/26) and `npm run build`; cross-process memory concurrency and external/browser integrations remain untested.
+- Preserve the boundary that future injected provider/skill adapters require separate review; this result does not clear unrelated legacy TLS/logging findings.
+- Learnings consumed: [security/agentic-data-boundaries]
