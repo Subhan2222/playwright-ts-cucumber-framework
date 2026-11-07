@@ -45,6 +45,10 @@ This repository contains a Behavior‑Driven Development (BDD) test automation f
   - `test-results/allure-report`
 - `npm run allure:open` opens the Allure report in your browser
 
+## Optional agentic testing foundation
+- See [docs/agentic-testing.md](docs/agentic-testing.md) for the provider-neutral contracts, opt-in Cucumber integration, validation commands, roadmap, and safety limits.
+- Agentic diagnosis is disabled unless `AGENTIC_TESTS_ENABLED=true` **and** an explicit runtime adapter is configured in `support/agentic-runtime.ts`. No LLM provider or external storage is selected by default.
+
 ## Environment
 - `BROWSER` controls browser: `chromium`, `firefox`, or `webkit`
 - `HEADLESS=false` runs browser in headed mode
