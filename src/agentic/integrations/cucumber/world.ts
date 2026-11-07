@@ -2,6 +2,7 @@ import type { IWorld } from '@cucumber/cucumber';
 import type { BrowserContext, Page } from 'playwright';
 import type POManager from '../../../pages/POManager';
 import type { AgentResponse } from '../../contracts/agent';
+import type { PomCapability } from '../../contracts/pom-capability';
 
 export interface FailureObservation {
   readonly scenarioName: string;
@@ -16,7 +17,12 @@ export interface ScenarioAgentRuntime {
 }
 
 export interface AgentRuntimeFactory {
-  (world: Pick<CucumberWorld, 'scenarioId' | 'scenarioName'>): Promise<ScenarioAgentRuntime>;
+  (scope: {
+    readonly scenarioId?: string;
+    readonly scenarioName?: string;
+    /** Present only after explicit, separate POM capability opt-in. */
+    readonly pomCapability?: PomCapability;
+  }): Promise<ScenarioAgentRuntime>;
 }
 
 /** Cucumber World extension; runtime and browser resources belong to one scenario. */

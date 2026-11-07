@@ -11,3 +11,10 @@
 - Debugging dead-ends and what actually worked: compatible lockfile updates and a same-major semver override cleared earlier findings; changing Cucumber/reporter majors then removed remaining advisories. `npm test`, `npm run build`, the Cucumber CLI help, and `npm run report` passed.
 - Techniques/patterns worth reusing: do not automatically defer major dependency changes when they are the only available security fix; scope them to the affected graph, verify package engine requirements, test existing consumer commands, and disclose any unrun environment-backed scenarios.
 - Learnings consumed: [backend/agentic-testing-foundation]
+
+## [t7.1] Added opt-in policy-checked POM capability
+- Codebase/domain discoveries: existing dashboard verification methods log exception text, so the capability uses separate read-only boolean observation methods and returns generic failures.
+- Wrong assumptions and corrections: a typed factory scope is not enough by itself; POM access must be passed as a separate, restricted facade only when both agentic and POM capability opt-ins plus an explicit allowlist are present.
+- Debugging dead-ends and what actually worked: TypeScript did not narrow an optional manager through a separately invoked `never` helper; direct throw branches provided clean strict-mode narrowing.
+- Techniques/patterns worth reusing: keep trusted Page Object closures private, expose fixed discriminated actions, increment budgets before async dispatch, and verify both that runtime scopes exclude raw objects and that no capability is supplied by default.
+- Learnings consumed: [backend/agentic-testing-foundation, security/agentic-data-boundaries, security/tls-validation-in-test-automation, architect/agentic-testing-boundaries]

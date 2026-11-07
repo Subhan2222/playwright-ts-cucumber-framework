@@ -15,6 +15,10 @@ import {
     disposeScenarioRuntime,
     initializeScenarioRuntime,
 } from '../src/agentic/integrations/cucumber/lifecycle';
+import {
+    createScenarioPomCapability,
+    pomPolicyFromEnvironment,
+} from '../src/agentic/integrations/cucumber/pom-capability';
 import { createScenarioAgentRuntime } from './agentic-runtime';
 
 setDefaultTimeout(Number(process.env.TIMEOUT ?? 60000));
@@ -45,10 +49,19 @@ AfterAll(async function () {
 Before(async function (this: CucumberWorld, { pickle }: ITestCaseHookParameter) {
     this.scenarioId = pickle.id;
     this.scenarioName = pickle.name;
+    const agenticEnabled = process.env.AGENTIC_TESTS_ENABLED?.toLowerCase() === 'true';
+    const pomPolicy = pomPolicyFromEnvironment(
+        agenticEnabled && process.env.AGENTIC_POM_CAPABILITIES_ENABLED?.toLowerCase() === 'true',
+        process.env.AGENTIC_POM_ALLOWED_ACTIONS
+    );
+    const pomCapability = pomPolicy.enabled && pomPolicy.allowedActions.length > 0
+        ? createScenarioPomCapability(this, pomPolicy)
+        : undefined;
     await initializeScenarioRuntime(
         this,
-        process.env.AGENTIC_TESTS_ENABLED?.toLowerCase() === 'true',
-        createScenarioAgentRuntime
+        agenticEnabled,
+        createScenarioAgentRuntime,
+        pomCapability
     );
     this.context = await globalBrowser.newContext({
         viewport: { width: 1280, height: 720 },

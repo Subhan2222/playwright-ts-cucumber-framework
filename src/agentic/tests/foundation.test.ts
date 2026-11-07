@@ -17,6 +17,7 @@ import type { CucumberWorld } from '../integrations/cucumber/world';
 import './orchestrator-guardrails.test';
 import './cucumber-opt-in.test';
 import './memory-telemetry.test';
+import './pom-capability.test';
 
 const policy: AgentPolicy = {
   enabled: true,

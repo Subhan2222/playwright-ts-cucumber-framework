@@ -4,6 +4,7 @@ import type {
   CucumberWorld,
   FailureObservation,
 } from './world';
+import type { PomCapability } from '../../contracts/pom-capability';
 
 const MAX_OBSERVATION_CHARS = 500;
 const DIAGNOSTIC_TIMEOUT_MS = 3000;
@@ -11,7 +12,8 @@ const DIAGNOSTIC_TIMEOUT_MS = 3000;
 export async function initializeScenarioRuntime(
   world: CucumberWorld,
   enabled: boolean,
-  factory?: AgentRuntimeFactory
+  factory?: AgentRuntimeFactory,
+  pomCapability?: PomCapability
 ): Promise<void> {
   if (!enabled) return;
   if (!factory) {
@@ -22,6 +24,7 @@ export async function initializeScenarioRuntime(
   world.agentRuntime = await factory({
     scenarioId: world.scenarioId,
     scenarioName: world.scenarioName,
+    ...(pomCapability ? { pomCapability } : {}),
   });
 }
 

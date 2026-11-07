@@ -17,6 +17,19 @@ class dashboardPage {
         this.MenuOptions = page.getByRole('link', { name: 'menuOption', exact: true });
     }
 
+    /** Read-only observation helpers for the optional, policy-checked POM facade. */
+    public async isDashboardMenuVisible(menuOption: string): Promise<boolean> {
+        return this.page.getByRole('link', { name: menuOption, exact: true }).isVisible();
+    }
+
+    public async isSearchResultVisible(searchItem: string): Promise<boolean> {
+        return this.page.getByRole('link', { name: searchItem, exact: true }).isVisible();
+    }
+
+    public async isMenuHidden(): Promise<boolean> {
+        return (await this.MenuOptions.count()) === 0;
+    }
+
     public async searchForItem(searchItem: string): Promise<void> {
         try {
             await this.SearchField.fill(searchItem);

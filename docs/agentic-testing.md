@@ -23,15 +23,17 @@ support/
 
 1. Keep `AGENTIC_TESTS_ENABLED` unset or set to anything except `true` for the unchanged Cucumber path. In this mode no runtime factory is invoked.
 2. To opt in, implement `support/agentic-runtime.ts` with explicitly selected agents, registered skills, strict rules and approved adapters. Then set `AGENTIC_TESTS_ENABLED=true`. The provided placeholder deliberately fails clearly if enabled before a runtime has been configured.
-3. Hooks create and dispose a runtime per scenario. On the first failed step only, the runtime can receive a bounded, best-effort observation with basic credential/query/email redaction. Its output is attached as supplementary text; the hook catches diagnostic/attachment failures and never changes step assertions or scenario status.
-4. Run `npm run build` and `npm test` for contract checks; continue to use `npm run cucumber` for the existing scenario runner.
+3. Optional POM access requires a second explicit opt-in: set `AGENTIC_POM_CAPABILITIES_ENABLED=true` and list only approved operations in `AGENTIC_POM_ALLOWED_ACTIONS` (for example `dashboard.verify-menu,dashboard.verify-menu-hidden`). Without both flags and a non-empty allowlist, no POM capability is passed to the runtime. Current operations are read-only dashboard verifications; policy limits each scenario to five calls and each input to 120 characters. Unknown operation names fail closed.
+4. The runtime factory receives only scenario identifiers and, when explicitly enabled, a `PomCapability.invoke()` facade with fixed typed actions. It never receives the `Page`, `BrowserContext`, POManager, locator, or full World through this capability path. The facade authorizes each operation before dispatching to existing Page Object methods and returns generic failures rather than forwarding Playwright/Page Object exception text. The capability is advisory and does not change scenario assertions or status.
+5. Hooks create and dispose a runtime per scenario. On the first failed step only, the runtime can receive a bounded, best-effort observation with basic credential/query/email redaction. Its output is attached as supplementary text; the hook catches diagnostic/attachment failures and never changes step assertions or scenario status.
+6. Run `npm run build` and `npm test` for contract checks; continue to use `npm run cucumber` for the existing scenario runner.
 
-No raw `Page`, `BrowserContext`, POManager, trace, screenshot, credential, or complete Cucumber World is passed to the runtime. A future UI capability should expose narrow, policy-checked POM operations rather than Playwright directly.
+No raw `Page`, `BrowserContext`, POManager, trace, screenshot, credential, or complete Cucumber World is passed to the runtime. The optional capability exposes only the narrow, policy-checked read-only POM operations listed above; it does not expose Playwright directly.
 
 ## Roadmap and production considerations
 
-- **Current increment:** deterministic contracts, registries, policy enforcement, opt-in Cucumber seam, bounded ephemeral memory, no-op telemetry, and tests.
-- **Next:** add reviewed read-only diagnostic skills and fake-provider lifecycle tests; keep diagnosis optional and bounded.
+- **Current increment:** deterministic contracts, registries, policy enforcement, opt-in Cucumber seam, bounded ephemeral memory, no-op telemetry, and an independently opt-in, read-only POM capability.
+- **Next:** add reviewed read-only diagnostic skills and fake-provider lifecycle tests; keep diagnosis optional and bounded. Any future mutating POM operation must be introduced as a separate capability class with explicit policy and additional tests/review.
 - **Later, explicit integrations:** choose a model, embedding, vector, persistent-memory, or telemetry adapter only after privacy, credentials, tenant isolation, retention/deletion, and spend controls are approved.
 
 External adapters are not dependencies in this increment. For scale, use isolated scenario/run namespaces, bounded concurrency, request timeouts, cancellation, quotas, backpressure, circuit breakers, and retention controls; persistent stores require tenant ACLs and encryption. Apply redaction/minimization before any external boundary and do not index test results by default. Keep provider credentials outside source control. Agent recommendations remain advisory: no autonomous test mutations, retries, locator invention, shell/filesystem access, or pass/fail authority.
