@@ -1,16 +1,51 @@
-name: Playwright Cucumber Smoke Tests
+name: Playwright Cucumber Cross-Browser Tests
 
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      suite:
+        description: Cucumber scenarios to run
+        type: choice
+        required: true
+        default: smoke
+        options:
+          - smoke
+          - regression
+          - all
+      browser:
+        description: Browser to test, or all browsers
+        type: choice
+        required: true
+        default: chromium
+        options:
+          - cross-browser
+          - chromium
+          - firefox
+          - webkit
+      vm_count:
+        description: GitHub runner VMs per selected browser
+        type: choice
+        required: true
+        default: '3'
+        options:
+          - '1'
+          - '2'
+          - '3'
 
 permissions:
   contents: read
 
 jobs:
-  smoke:
+  browser_tests:
+    name: Cucumber tests (${{ matrix.browser }}, shard ${{ matrix.shard }})
     runs-on: ubuntu-22.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.browser != 'cross-browser' && format('["{0}"]', inputs.browser) || '["chromium","firefox","webkit"]') }}
+        shard: ${{ fromJSON(inputs.vm_count == '1' && '[1]' || inputs.vm_count == '2' && '[1,2]' || '[1,2,3]') }}
 
     steps:
       - name: Check out repository
@@ -34,21 +69,114 @@ jobs:
             exit 1
           fi
 
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps ${{ matrix.browser }}
 
-      - name: Run smoke tests
-        run: npm run smoke
+      - name: Run assigned feature shard
+        id: tests
+        run: |
+          all_features=()
+          while IFS= read -r feature; do
+            all_features+=("$feature")
+          done < <(find src/features -type f -name '*.feature' | sort)
+
+          if (( ${#all_features[@]} < SHARD_COUNT )); then
+            echo "::error::Shard count ($SHARD_COUNT) exceeds feature file count (${#all_features[@]})."
+            exit 1
+          fi
+
+          shard_features=()
+          first_feature_index=$((SHARD_INDEX - 1))
+          for ((index=first_feature_index; index<${#all_features[@]}; index+=SHARD_COUNT)); do
+            shard_features+=("${all_features[index]}")
+          done
+
+          if (( ${#shard_features[@]} == 0 )); then
+            echo "::error::No feature files were assigned to shard $SHARD_INDEX."
+            exit 1
+          fi
+
+          case "$TEST_SUITE" in
+            smoke)
+              test_options=(--tags @smoke)
+              ;;
+            regression)
+              test_options=(--tags @regression)
+              ;;
+            all)
+              test_options=()
+              ;;
+            *)
+              echo "::error::Unsupported Cucumber suite: $TEST_SUITE"
+              exit 1
+              ;;
+          esac
+
+          npm run cucumber -- "${shard_features[@]}" "${test_options[@]}"
         env:
           ENV_SECRET: ${{ secrets.ENV_SECRET }}
           USER_SECRET: ${{ secrets.USER_SECRET || secrets.ENV_SECRET }}
+          BROWSER: ${{ matrix.browser }}
+          TEST_SUITE: ${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'smoke' }}
+          SHARD_INDEX: ${{ matrix.shard }}
+          SHARD_COUNT: ${{ github.event_name == 'workflow_dispatch' && inputs.vm_count || '3' }}
 
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-test-reports
+          name: cucumber-reports-${{ matrix.browser }}-shard-${{ matrix.shard }}
           path: |
             test-results/reports/
             test-results/allure-results/
+          if-no-files-found: warn
+
+  aggregate_reports:
+    name: Aggregate test reports
+    if: always()
+    needs: browser_tests
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download browser and shard reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cucumber-reports-*
+          path: downloaded-reports
+          merge-multiple: false
+
+      - name: Merge Cucumber and Allure results
+        run: npx ts-node ./utils/scripts/merge-ci-reports.ts
+
+      - name: Generate combined Cucumber HTML report
+        run: npm run report
+        env:
+          BROWSER: ${{ github.event_name == 'workflow_dispatch' && inputs.browser || 'cross-browser' }}
+          TEST_ENV: GitHub Actions
+
+      - name: Generate combined Allure HTML report
+        run: npm run allure:generate
+
+      - name: Upload combined reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-cucumber-allure-reports
+          path: |
+            test-results/reports/cucumber-report.json
+            test-results/reports/cucumber-extended-report.html
+            test-results/allure-results/
+            test-results/allure-report/
           if-no-files-found: warn
