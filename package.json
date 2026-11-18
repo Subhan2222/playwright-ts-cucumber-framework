@@ -16,7 +16,11 @@
     "encrypt-user-data": "ts-node ./utils/scripts/encrypt-user-data.ts",
     "decrypt-user-data": "ts-node ./utils/scripts/decrypt-user-data.ts",
     "allure:generate": "npx allure generate test-results/allure-results --clean -o test-results/allure-report",
-    "allure:open": "npx allure open test-results/allure-report"
+    "allure:open": "npx allure open test-results/allure-report",
+    "test:chromium": "BROWSER=chromium npm run cucumber",
+    "test:firefox": "BROWSER=firefox npm run cucumber",
+    "test:webkit": "BROWSER=webkit npm run cucumber",
+    "test:cross-browser": "npm run test:chromium && npm run test:firefox && npm run test:webkit"
   },
   "repository": {
     "type": "git",
