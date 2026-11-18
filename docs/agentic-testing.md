@@ -74,7 +74,7 @@ Interactive approval requires a serial run with an available TTY. If approval is
 |---|---|
 | Failure diagnosis | Ollama receives a bounded failure summary and returns advisory text. The first failed step per scenario is diagnosed. |
 | Locator self-healing | Ollama selects from locally discovered candidates; the framework validates the choice and requires approval for one retry. |
-| Skills | Typed, read-only skill definitions are centralized in `src/agentic/skills.ts`. They are not yet wired into the Cucumber runtime. |
+| Skills | Typed, read-only skill definitions are centralized in `src/agentic/skills/skills.ts`. They are not yet wired into the Cucumber runtime. |
 | Rules | A policy parser, rules engine, and disabled example policy exist. They do not currently control Cucumber diagnosis or locator recovery. |
 | Memory | In-memory and optional file-backed stores exist. Cucumber does not currently load or use them. |
 | Test generation and repair | Automatic Gherkin-to-step/Page Object generation, file editing, test execution loops, and automatic code repair are not implemented. |
@@ -92,7 +92,7 @@ That means the current Cucumber integration calls the Ollama provider directly f
 - `support/agentic-runtime.ts` — sends diagnosis and locator-selection requests to Ollama.
 - `src/agentic/integrations/cucumber/locator-recovery.ts` — detects eligible locator failures, gathers candidates, validates suggestions, and enforces the retry boundary.
 - `support/locator-recovery.ts` — handles model calls, interactive approval, and Cucumber report attachments.
-- `src/agentic/skills.ts` — centralized read-only skill definitions.
+- `src/agentic/skills/skills.ts` — centralized read-only skill definitions.
 - `src/agentic/core/rules-engine.ts` and `src/agentic/config/rules.example.json` — policy enforcement code and disabled sample policy.
 - `src/agentic/adapters/memory/` — in-memory and file-backed memory implementations.
 

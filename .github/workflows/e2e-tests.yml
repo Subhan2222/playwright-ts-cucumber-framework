@@ -1,4 +1,4 @@
-name: E2E tests
+name: Smoke tests
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  cucumber:
+  smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -29,8 +29,8 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run Cucumber tests
-        run: npm run cucumber
+      - name: Run smoke tests
+        run: npm run smoke
         env:
           ENV_SECRET: ${{ secrets.ENV_SECRET }}
 

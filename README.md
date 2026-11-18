@@ -1,114 +1,60 @@
 # Playwright TypeScript Cucumber Framework
 
-A browser end-to-end testing framework using Playwright, TypeScript, and Cucumber/Gherkin. This guide describes how the current repository is organized, how to run it, and how to add tests. It is intended to grow alongside the framework: when a command, folder, configuration, or workflow changes, update the corresponding section here in the same change.
+A browser end-to-end testing framework using **Playwright**, **TypeScript**, and **Cucumber/Gherkin**.
+This guide describes how the repository is organized, how to run it, and how to add tests.
+Update the relevant section here whenever a command, folder, config, or workflow changes.
+
+---
+
+## Table of Contents
+
+1. [What this framework does](#what-this-framework-does)
+2. [Prerequisites](#1-prerequisites)
+3. [Get the project and install dependencies](#2-get-the-project-and-install-dependencies)
+4. [Project layout](#3-understand-the-project-layout)
+5. [Configuration files](#configuration-files-why-they-exist-and-how-to-use-them)
+6. [Configure test URLs and credentials](#4-configure-test-urls-and-credentials)
+7. [Understand the Cucumber hooks](#5-understand-the-cucumber-hooks)
+8. [Add a feature in Gherkin](#6-add-a-feature-in-gherkin)
+9. [Implement steps and page objects](#7-implement-steps-and-page-objects)
+10. [Run tests](#8-run-tests)
+11. [Reports and failure artifacts](#9-review-reports-and-failure-artifacts)
+12. [Agentic AI Testing (Ollama)](#10-agentic-ai-testing-ollama)
+13. [Continuous integration](#11-continuous-integration)
+14. [Add or change framework behavior](#12-add-or-change-framework-behavior)
+15. [Common Git commands](#13-common-git-commands)
+
+---
 
 ## What this framework does
 
-- Describes test scenarios in readable Gherkin feature files.
-- Connects Gherkin steps to TypeScript step definitions.
-- Uses Playwright to automate Chromium, Firefox, or WebKit.
-- Organizes browser interactions in page objects and provides them through a page-object manager.
-- Produces Cucumber HTML/JSON and Allure results.
-- Supports encrypted environment URLs and user data.
-- Runs the Cucumber suite in GitHub Actions.
+| Capability | Detail |
+|---|---|
+| Gherkin scenarios | Readable `.feature` files describe test behavior |
+| Step definitions | TypeScript connects Gherkin steps to browser actions |
+| Browser automation | Playwright drives Chromium, Firefox, or WebKit |
+| Page Object Model | Browser interactions live in page objects via `POManager` |
+| Reporting | Cucumber HTML/JSON + Allure results |
+| Security | Encrypted environment URLs and user data |
+| CI/CD | GitHub Actions workflow included |
+| AI layer (opt-in) | Local Ollama model for failure diagnosis and self-healing locators |
+
+---
 
 ## 1. Prerequisites
 
-- Node.js 20 (the GitHub Actions workflow uses Node.js 20).
-- npm, included with Node.js.
-- Git.
-- Access to this repository and the test environment.
-- The `ENV_SECRET` value used to encrypt the environment and user-data files. Do not commit this value or decrypted test data.
+- **Node.js 20** (GitHub Actions uses Node.js 20)
+- **npm** — included with Node.js
+- **Git**
+- Access to this repository and the test environment
+- The `ENV_SECRET` value for encrypted environment/user-data files — **never commit this**
 
-Recommended VS Code extensions: ESLint, Prettier, Cucumber (Gherkin) Full Support, and Playwright Test for VS Code.
+> **Recommended VS Code extensions:** ESLint · Prettier · Cucumber (Gherkin) Full Support · Playwright Test for VS Code
 
-## Reports
-- `npm run cucumber` creates:
-  - `test-results/reports/cucumber-report.html`
-  - `test-results/reports/cucumber-report.json`
-  - `test-results/allure-results`
-- `npm run report` creates:
-  - `test-results/reports/cucumber-extended-report.html`
-- Failed scenarios include an `AGENTIC FAILURE ANALYSIS` attachment with the diagnosis, model, failed step, and any provider error or timeout. Open the Cucumber HTML report, or run `npm run report` and inspect the extended report.
-- Agentic locator recovery requires both `AGENTIC_TESTS_ENABLED=true` and `AGENTIC_SELF_HEALING_ENABLED=true`. Ollama selects from locally discovered candidates; the framework validates the choice and requires approval before a serial interactive retry. If approval is unavailable, such as in parallel workers, it attaches a proposal and keeps the scenario failed.
-
-## Optional agentic testing foundation
-- See [docs/agentic-testing.md](docs/agentic-testing.md) for the provider integration, opt-in Cucumber behavior, validation commands, roadmap, and safety limits.
-- Failure diagnosis uses the local Ollama provider when `AGENTIC_TESTS_ENABLED=true`; it is supplementary and does not change Cucumber pass/fail results.
-- Locator recovery additionally requires `AGENTIC_SELF_HEALING_ENABLED=true` and uses the configured local Ollama model for candidate selection; see [docs/agentic-testing.md](docs/agentic-testing.md) for its approval and retry limits.
-
-### Run agentic tests locally
-Install Ollama first. On macOS with Homebrew, start the Ollama service:
-
-```sh
-brew services start ollama
-```
-
-If you installed Ollama another way, start it with that installation's normal method. You can also run `ollama serve` in a separate terminal and leave that terminal open while testing.
-
-Check that the Ollama API is responding:
-
-```sh
-curl --fail http://127.0.0.1:11434/api/tags
-```
-
-The command should return JSON containing a `models` list. If it cannot connect, Ollama is not running at that address.
-
-Check whether the configured model is installed:
-
-```sh
-ollama list
-```
-
-Look for `qwen3:4b`. If it is not listed, download it once:
-
-```sh
-ollama pull qwen3:4b
-```
-
-Optionally check that the model can respond:
-
-```sh
-ollama run qwen3:4b "Reply with OK"
-```
-
-Make sure `.env` contains these settings:
-
-```env
-AGENTIC_TESTS_ENABLED=true
-AGENTIC_SELF_HEALING_ENABLED=true
-OLLAMA_BASE_URL=http://127.0.0.1:11434
-OLLAMA_MODEL=qwen3:4b
-```
-
-Check the settings loaded from `.env` without printing other environment values:
-
-```sh
-node -r dotenv/config -e 'console.log({
-  agenticEnabled: process.env.AGENTIC_TESTS_ENABLED === "true",
-  selfHealingEnabled: process.env.AGENTIC_SELF_HEALING_ENABLED === "true",
-  ollamaBaseUrl: process.env.OLLAMA_BASE_URL || "(not set)",
-  ollamaModel: process.env.OLLAMA_MODEL || "(not set)"
-})'
-```
-
-Expect both flags to be `true`, the URL to be `http://127.0.0.1:11434`, and the model to be `qwen3:4b`. If a value is missing or incorrect, update `.env`.
-
-Once Ollama is running, the model is installed, and the settings are correct, run:
-
-```sh
-npm run cucumber
-```
-
-Keep Ollama running while the tests execute. Locator recovery requires a serial interactive run so you can approve a suggested retry; without interactive approval, the suggestion is reported but the failed scenario remains failed.
-
-## Environment
-- `BROWSER` controls browser: `chromium`, `firefox`, or `webkit`
-- `HEADLESS=false` runs browser in headed mode
-
-
+---
 
 ## 2. Get the project and install dependencies
+
 ```bash
 git clone https://github.com/Subhan2222/playwright-ts-cucumber-framework.git
 cd playwright-ts-cucumber-framework
@@ -116,57 +62,60 @@ npm ci
 npx playwright install chromium
 ```
 
-Use `npm ci` for a clean install from the committed `package-lock.json`. `npx playwright install chromium` installs the browser used by default. To run another browser locally, install it too:
+> Use `npm ci` for a clean, locked install from `package-lock.json`.
+
+To run other browsers locally, install them too:
 
 ```bash
 npx playwright install firefox
-# or
 npx playwright install webkit
 ```
+
+---
 
 ## 3. Understand the project layout
 
 ```text
-config/                 Playwright and alternate Cucumber configuration
-data/
-  envData/              Encrypted environment URL configuration
-  userData/             Encrypted test user data
-src/
-  features/             Gherkin scenarios
-  pages/                Page objects and POManager
-  steps/                TypeScript implementations of Gherkin steps
-support/hooks.ts        Browser and scenario lifecycle
-utils/                  Shared browser, environment, and data helpers
-utils/scripts/          Encryption, decryption, and report scripts
-.github/workflows/      GitHub Actions CI workflow
-cucumber.json           Cucumber CLI configuration used by npm run cucumber
+playwright-ts-cucumber-framework/
+├── config/                   Playwright and alternate Cucumber configuration
+├── data/
+│   ├── envData/              Encrypted environment URL configuration
+│   └── userData/             Encrypted test user data
+├── docs/
+│   └── agentic-testing.md    AI agentic layer guide
+├── src/
+│   ├── agentic/              AI agentic layer (contracts, core, adapters, integrations)
+│   ├── features/             Gherkin scenarios (.feature files)
+│   ├── pages/                Page objects and POManager
+│   └── steps/                TypeScript step definitions
+├── support/
+│   ├── hooks.ts              Browser and scenario lifecycle
+│   ├── agentic-runtime.ts    Ollama diagnosis and locator selection
+│   └── locator-recovery.ts   Self-healing approval and report attachment
+├── utils/                    Shared browser, environment, and data helpers
+│   └── scripts/              Encryption, decryption, and report scripts
+├── .github/workflows/        GitHub Actions CI workflow
+├── .env.example              Environment variable template (copy to .env)
+├── cucumber.json             Active Cucumber CLI configuration
+├── tsconfig.json             TypeScript compiler settings
+└── package.json              npm scripts and dependencies
 ```
 
-The `npm run cucumber` command uses `cucumber.json`: it loads `support/hooks.ts` and all `src/steps/**/*.ts`, then runs features under `src/features/**/*.feature`. The separate `config/playwright.config.ts` is present for Playwright Test usage; the current npm scripts execute Cucumber, not the native Playwright Test runner.
+> `npm run cucumber` uses `cucumber.json` — it loads `support/hooks.ts` and all `src/steps/**/*.ts`, then runs all features under `src/features/**/*.feature`.
 
-### Configuration files: why they exist and how to use them
+---
 
-These configuration files serve different runners. Cucumber executes the current BDD suite; Playwright Test is a separate runner for tests written with Playwright's `test()` API. The presence of both configurations does not mean they are both used by `npm run cucumber`.
+## Configuration files: why they exist and how to use them
 
-| File | Why it exists | Used by now? |
-| --- | --- | --- |
-| `cucumber.json` | Tells Cucumber which hooks, step definitions, feature files, TypeScript support, and report formatters to use. | Yes. This is the config picked up by `npm run cucumber`. |
-| `config/cucumber.config.ts` | A TypeScript-formatted alternative Cucumber config with similar feature, step, and report settings. It can be a single place for Cucumber settings if the command is explicitly wired to it. | No. The current script does not name this file; treat `cucumber.json` as authoritative for now. |
-| `config/playwright.config.ts` | Holds settings for the separate Playwright Test runner, such as test folder, timeout, headless mode, and base URL. | No. The current npm test scripts run Cucumber, not Playwright Test. |
-| `support/hooks.ts` | Starts/stops the browser, creates scenario pages, applies runtime browser settings, and handles failure artifacts. | Yes. Loaded by `cucumber.json`. |
-| `tsconfig.json` | Configures how TypeScript is checked and compiled, including strict type checking and module settings. | Yes. Used by TypeScript tooling and `ts-node`. |
+| File | Purpose | Active? |
+|---|---|---|
+| `cucumber.json` | Cucumber hooks, steps, feature paths, TypeScript support, report formatters | ✅ Yes — used by `npm run cucumber` |
+| `config/cucumber.config.ts` | TypeScript-formatted alternative Cucumber config | ❌ No — not wired into npm scripts |
+| `config/playwright.config.ts` | Settings for the native Playwright Test runner | ❌ No — current scripts use Cucumber |
+| `support/hooks.ts` | Browser launch/teardown, tracing, failure artifacts | ✅ Yes — loaded by `cucumber.json` |
+| `tsconfig.json` | Strict type checking, ES2020 target, CommonJS output | ✅ Yes — used by TypeScript and `ts-node` |
 
-#### `cucumber.json` — the active Cucumber setup
-
-Cucumber uses this file when `npm run cucumber` runs `cucumber-js`. It connects the Gherkin files to executable TypeScript code:
-
-- `require` loads `support/hooks.ts` and all step definitions under `src/steps/`.
-- `requireModule` loads `ts-node/register`, so Cucumber can execute the TypeScript files directly.
-- `paths` selects `.feature` files under `src/features/`.
-- `format` writes progress to the terminal and generates HTML, JSON, and Allure results.
-- `formatOptions.resultsDir` tells the Allure formatter where to write its results.
-
-For example, the relevant shape is:
+### `cucumber.json` — active Cucumber setup
 
 ```json
 {
@@ -179,80 +128,43 @@ For example, the relevant shape is:
       "json:test-results/reports/cucumber-report.json",
       "allure-cucumberjs/reporter"
     ],
-    "formatOptions": {
-      "resultsDir": "test-results/allure-results"
-    },
+    "formatOptions": { "resultsDir": "test-results/allure-results" },
     "paths": ["src/features/**/*.feature"]
   }
 }
 ```
 
-For normal Cucumber work, edit this active config when changing feature discovery, step loading, hooks, or report output. Run it with:
+### Runtime environment variables
 
-```bash
-npm run cucumber
-```
+| Variable | Used by | Default |
+|---|---|---|
+| `BROWSER` | Cucumber hooks | `chromium` (supports `firefox`, `webkit`) |
+| `HEADLESS` | Cucumber hooks + Playwright config | `true`; set `false` for headed mode |
+| `TIMEOUT` | Cucumber hooks + Playwright config | Cucumber: 60,000 ms · Playwright Test: 30,000 ms |
+| `ENV_SECRET` | URL encryption/decryption | Required |
+| `USER_SECRET` | User-data encryption/decryption | Optional; falls back to `ENV_SECRET` |
 
-#### `config/cucumber.config.ts` — the alternate Cucumber config
-
-This file represents the same kind of configuration in TypeScript syntax. A TypeScript config can be convenient when a project wants to maintain its runner settings as code. In this repository it is currently not wired into the `cucumber` npm script, and its options are not completely identical to `cucumber.json` (for example, it does not list `requireModule`).
-
-That means editing this file alone will not change the behavior of `npm run cucumber`. For now, keep `cucumber.json` as the source of truth. If you later decide to switch, update the npm script to explicitly select this config and verify that the chosen Cucumber command can load the TypeScript config and register `ts-node`; then remove or clearly mark the duplicate config to prevent them drifting apart.
-
-#### `config/playwright.config.ts` — for native Playwright Test tests
-
-The filename here is **`playwright.config.ts`**, not `.js`. `.js` is another common extension in JavaScript projects, but this repository's config is written in TypeScript. It uses Playwright Test's `defineConfig()` to set defaults for tests written with `@playwright/test`'s `test()` and `expect()` APIs.
-
-The current settings mean:
-
-- `testDir: './tests'` looks for native Playwright Test files in the root `tests/` directory.
-- `timeout` sets the per-test timeout, using `TIMEOUT` when defined and otherwise 30 seconds.
-- `use.headless` runs browsers headlessly unless `HEADLESS=false`.
-- `use.baseURL` provides a default base URL from `BASE_URL`, or `https://example.com`.
-
-To use this config, first add native Playwright Test files (usually named `*.spec.ts`) under `tests/`, then run that runner explicitly:
-
-```bash
-npx playwright test --config=config/playwright.config.ts
-```
-
-This is a different test style from the current Gherkin/Cucumber tests. Cucumber's browser is created in `support/hooks.ts`, and the current Cucumber navigation uses `baseUrl` from the encrypted `data/envData/envUrls.json` config. It does not get its browser or base URL from `config/playwright.config.ts`.
-
-#### TypeScript and runtime environment settings
-
-`tsconfig.json` enables strict type checking, targets ES2020, uses CommonJS module output, and includes TypeScript files in the project. This is important for catching type mistakes and running TypeScript support code through `ts-node`.
-
-The Cucumber hooks use these runtime variables:
-
-| Variable | Used by | Default / behavior |
-| --- | --- | --- |
-| `BROWSER` | Cucumber hooks | `chromium`; supports `firefox` and `webkit` too. |
-| `HEADLESS` | Cucumber hooks and Playwright config | Headless unless its value is `false` (case-insensitive). |
-| `TIMEOUT` | Cucumber hooks and Playwright config | Cucumber: 60,000 ms; Playwright Test: 30,000 ms. For Cucumber, export it in the shell or CI environment; the hook reads it before calling `dotenv.config()`. |
-| `ENV_SECRET` | Environment URL encryption/decryption | Required for encrypted environment URLs. |
-| `USER_SECRET` | User-data encryption/decryption | Optional; falls back to `ENV_SECRET`. |
-
-For example, set test execution options in the shell for one run:
+Example — override for a single run:
 
 ```bash
 BROWSER=firefox HEADLESS=false TIMEOUT=90000 npm run cucumber
 ```
 
-The native Playwright Test config also reads `BASE_URL` and defaults it to `https://example.com`. The current Cucumber steps do not use that `BASE_URL`; they get the site base URL from the encrypted URL configuration (`baseUrl` in `envUrls.json`). Configure the correct source depending on which runner is being used.
+---
 
 ## 4. Configure test URLs and credentials
 
-The framework keeps environment URLs in `data/envData/envUrls.json.enc` and test users in `data/userData/userData.json.enc`. Set `ENV_SECRET` in your shell or a local, untracked `.env` file:
+Sensitive data lives in encrypted files. Set `ENV_SECRET` in a local `.env` (copy from `.env.example`):
 
 ```dotenv
 ENV_SECRET=your-private-encryption-secret
 ```
 
-Keep `.env` and decrypted data private. `.gitignore` excludes `.env`, `data/envData/envUrls.json`, and `data/userData/userData.json`. Never paste real credentials into source code, examples, commits, or chat.
+> `.gitignore` excludes `.env` and all decrypted JSON files. **Never commit secrets.**
 
 ### Environment URL file
 
-The plaintext URL file is `data/envData/envUrls.json`. It contains a base URL and paths used by steps. For example, use safe placeholder values like these and replace them with URLs for your own test environment:
+Plaintext: `data/envData/envUrls.json`
 
 ```json
 {
@@ -262,76 +174,51 @@ The plaintext URL file is `data/envData/envUrls.json`. It contains a base URL an
 }
 ```
 
-In the login navigation step, `getEnvConfig()` reads the configuration and the `basePage` helper combines `baseUrl` and `loginPath` before calling Playwright's `page.goto()`. The configuration is cached in memory so later calls reuse it:
-
-```typescript
-const env = getEnvConfig();
-await page.navigateTo(env.loginPath);
-```
-
-If a plaintext `data/envData/envUrls.json` exists, `getEnvConfig()` reads that file. Otherwise, it decrypts `data/envData/envUrls.json.enc` into memory. The Cucumber `BeforeAll` hook also explicitly decrypts the encrypted URL file before launching the browser. The runtime decryption function does not write a plaintext URL file to disk.
-
-### Encrypt and decrypt environment URLs
-
-To create or update the encrypted URL file:
-
-1. Create `data/envData/envUrls.json` with the required URL fields.
-2. Set `ENV_SECRET` in `.env` or the shell.
-3. Run:
+### Encrypt / Decrypt environment URLs
 
 ```bash
+# Create / update the encrypted file (removes plaintext after encrypting)
 npm run encrypt-env
-```
 
-The script writes `data/envData/envUrls.json.enc` and removes the plaintext input file. To explicitly create a plaintext copy for local inspection or editing, run:
-
-```bash
+# Write a plaintext copy for local editing (encrypt again when done)
 npm run decrypt-env
 ```
 
-This command writes `data/envData/envUrls.json` and leaves it on disk. After editing, run `npm run encrypt-env` again; that script updates the encrypted file and removes the plaintext copy. Do not commit or share the decrypted file.
+### Encrypt / Decrypt user data
 
-### Encrypt and decrypt user data
-
-The encrypted user file is `data/userData/userData.json.enc`. Its plaintext source is `data/userData/userData.json`. The helper supports user records with ID, username, and password fields, for example:
+Plaintext: `data/userData/userData.json`
 
 ```json
-[
-  {
-    "UserId": 1,
-    "UserName": "example-test-user",
-    "UserPassword": "replace-with-a-private-test-password"
-  }
-]
+[{ "UserId": 1, "UserName": "example-user", "UserPassword": "replace-me" }]
 ```
-
-Use only non-working placeholders in documentation. To create or update the encrypted file, create the private plaintext JSON locally, set `USER_SECRET` (or use `ENV_SECRET`), and run:
 
 ```bash
-npm run encrypt-user-data
+npm run encrypt-user-data   # writes .enc file and removes plaintext
+npm run decrypt-user-data   # writes plaintext for editing
 ```
 
-This writes `data/userData/userData.json.enc` and deletes the plaintext source. For local troubleshooting, `npm run decrypt-user-data` writes `data/userData/userData.json` and leaves it on disk; encrypt it again after editing to remove the plaintext file.
+### CI secret setup
 
-During test execution, `decryptUserDataFile()` reads the encrypted user data into memory, and `getUserCredentialsById("1")` selects the matching record. The current login step then fills the username and password fields. This normal runtime helper does not need to create a plaintext user-data file.
+Add `ENV_SECRET` under **GitHub → Settings → Secrets and variables → Actions**.
+If user data uses a separate `USER_SECRET`, add that too.
 
-### Secret setup in CI
-
-The CI workflow expects `ENV_SECRET` to be configured as a GitHub Actions repository secret. Add it under **Settings → Secrets and variables → Actions**. The workflow does not print or store the secret in the repository. If user data is encrypted with a separate `USER_SECRET`, add that GitHub Actions secret too and pass it to the test job.
+---
 
 ## 5. Understand the Cucumber hooks
 
-`cucumber.json` loads `support/hooks.ts` before the step definitions. The hooks manage shared browser startup and cleanup, then create an isolated browser context for each scenario:
+`support/hooks.ts` manages the full browser and scenario lifecycle:
 
-1. **`BeforeAll` runs once before the suite.** It decrypts the URL configuration into memory, chooses the browser from `BROWSER` (Chromium by default), and launches it. `HEADLESS=false` shows the browser window.
-2. **`Before` runs before each scenario.** It creates a new context with a 1280×720 viewport, starts Playwright tracing (screenshots, DOM snapshots, and sources), creates a page, and constructs a `POManager` on the Cucumber World (`this.pageManager`).
-3. **`BeforeStep` and `AfterStep` run around each step.** They log step start and pass/fail status to the console.
-4. **`After` runs after each scenario.** On failure, it attaches the error text, a screenshot, and the trace to the Cucumber result. It stops tracing, then closes the page and context. Successful scenarios stop tracing without attaching a failure trace.
-5. **`AfterAll` runs once at suite end.** It closes the shared browser.
-
-This is the basic lifecycle in the current hooks file:
+| Hook | Runs | What it does |
+|---|---|---|
+| `BeforeAll` | Once before the suite | Decrypts URL config, launches browser |
+| `Before` | Before each scenario | Creates browser context + page, starts tracing, creates `POManager` |
+| `BeforeStep` | Before each step | Logs step start |
+| `AfterStep` | After each step | Logs pass/fail; on failure triggers Ollama diagnosis (if enabled) |
+| `After` | After each scenario | Attaches screenshot + trace on failure, closes page and context |
+| `AfterAll` | Once after the suite | Closes the shared browser |
 
 ```typescript
+// Simplified view — see support/hooks.ts for full logic
 BeforeAll(async function () {
   await decryptEnvFile();
   globalBrowser = await chromium.launch({ headless: true });
@@ -339,16 +226,16 @@ BeforeAll(async function () {
 
 Before(async function () {
   this.context = await globalBrowser.newContext();
-  this.page = await this.context.newPage();
+  this.page    = await this.context.newPage();
   this.pageManager = new POManager(this.page);
 });
 ```
 
-The example is intentionally shortened; `support/hooks.ts` contains the browser selection, tracing, failure attachments, and cleanup logic used by the framework.
+---
 
 ## 6. Add a feature in Gherkin
 
-Create a `.feature` file under `src/features/`. A feature describes behavior, while step definitions contain the executable code. For example, the existing login feature uses a `Background` to navigate to the login page before each scenario:
+Create a `.feature` file under `src/features/`:
 
 ```gherkin
 @login @regression
@@ -364,11 +251,13 @@ Feature: OrangeHRM Login Page
     Then the user should be redirected to Dashboard page
 ```
 
-Use tags such as `@smoke` and `@regression` to select related scenarios. A `Scenario Outline` with an `Examples` table is useful for repeating the same behavior with multiple input values.
+> Use `@smoke` / `@regression` tags to run subsets. Use `Scenario Outline` + `Examples` for data-driven tests.
+
+---
 
 ## 7. Implement steps and page objects
 
-Add matching Cucumber step definitions under `src/steps/`. Keep these focused on translating a scenario into page-object calls. This follows the current login step pattern and uses the `POManager` initialized by the scenario hook:
+**Step definition** (`src/steps/`):
 
 ```typescript
 When('the user enters username {string}', async function (username: string): Promise<void> {
@@ -377,7 +266,7 @@ When('the user enters username {string}', async function (username: string): Pro
 });
 ```
 
-Add selectors and browser interactions to the relevant page object under `src/pages/`, rather than placing raw selectors in feature files. For example:
+**Page object** (`src/pages/`):
 
 ```typescript
 this.usernameInput = page.locator('input[name="username"]');
@@ -387,79 +276,141 @@ public async enterUsername(username: string): Promise<void> {
 }
 ```
 
-If adding a new page object, register a getter for it in `src/pages/POManager.ts`. `support/hooks.ts` creates a fresh browser context and page for each scenario and puts a `POManager` instance on the Cucumber World as `this.pageManager`.
+> Register every new page object as a getter in `src/pages/POManager.ts`.
+
+---
 
 ## 8. Run tests
 
-Run all configured Cucumber features:
-
 ```bash
+# Run the full suite
 npm run cucumber
-```
 
-Run only tagged scenarios:
-
-```bash
+# Run by tag
 npm run smoke
 npm run regression
-# Or pass a Cucumber tag expression directly:
 npm run cucumber -- --tags "@login and @smoke"
-```
 
-Useful environment options:
-
-```bash
+# Browser and display options
 BROWSER=firefox npm run cucumber
 HEADLESS=false npm run cucumber
 TIMEOUT=90000 npm run cucumber
 ```
 
-`BROWSER` supports `chromium`, `firefox`, and `webkit`; it defaults to Chromium. `HEADLESS` defaults to headless mode; set it to `false` for a visible browser. `TIMEOUT` sets the Cucumber step timeout in milliseconds.
-
-The `test` script in `package.json` is currently a placeholder and exits with an error. Use `npm run cucumber` for the actual test suite.
+---
 
 ## 9. Review reports and failure artifacts
 
-The Cucumber configuration writes:
+After a run, these files are generated:
 
-- `test-results/reports/cucumber-report.html`
-- `test-results/reports/cucumber-report.json`
-- `test-results/allure-results/`
-
-Generate and open the Allure report:
+| Output | Path |
+|---|---|
+| Cucumber HTML report | `test-results/reports/cucumber-report.html` |
+| Cucumber JSON report | `test-results/reports/cucumber-report.json` |
+| Allure results | `test-results/allure-results/` |
+| Extended HTML report | `test-results/reports/cucumber-extended-report.html` (via `npm run report`) |
 
 ```bash
+# Generate and open Allure report
 npm run allure:generate
 npm run allure:open
 ```
 
-`support/hooks.ts` attaches an error message, screenshot, and Playwright trace to failed scenarios when available. Generated reports and test results are local artifacts; the GitHub Actions workflow uploads the Cucumber and Allure result directories even when tests fail.
+> Failed scenarios automatically attach: **error message · screenshot · Playwright trace**.
+> When agentic is enabled, an `AGENTIC FAILURE ANALYSIS` block is also attached.
 
-## 10. Continuous integration
+---
 
-The workflow at `.github/workflows/e2e-tests.yml` runs for pushes, pull requests, or manual dispatch. It checks out the repository, sets up Node.js 20, installs dependencies with `npm ci`, installs Chromium, runs `npm run cucumber`, and uploads reports.
+## 10. Agentic AI Testing (Ollama)
 
-Before enabling CI for a repository, add `ENV_SECRET` as a repository Actions secret. Test URLs and credentials must also be reachable/valid from the GitHub-hosted runner. The current workflow installs Chromium only; update the workflow if the suite is expanded to run other browsers.
+An opt-in AI layer uses a **local Ollama model** for:
+- **Failure diagnosis** — brief advisory analysis attached to the Cucumber report
+- **Locator self-healing** — suggests a replacement locator from visible page controls when a step fails
 
-## 11. Add or change framework behavior
+> This is **supplementary only** — it never changes Cucumber pass/fail results.
+> See [`docs/agentic-testing.md`](docs/agentic-testing.md) for full details, flow diagram, and safety limits.
 
-When adding a test or changing framework behavior, update the appropriate layer:
+### Quick setup
 
-1. Add or update the Gherkin scenario in `src/features/`.
-2. Add or update its step definitions in `src/steps/`.
-3. Implement browser actions and assertions in a page object in `src/pages/`.
-4. Register new page objects in `src/pages/POManager.ts`.
-5. Add shared setup or teardown only when needed in `support/hooks.ts`.
-6. Update this guide when commands, setup, configuration, reports, secrets, or workflow behavior changes.
-7. Run the smallest relevant test locally and inspect the generated report.
+**Step 1 — Install and start Ollama:**
 
-Keep scenario language readable, reuse existing steps/page objects where practical, and never commit decrypted test data or secrets.
+```bash
+brew services start ollama      # macOS Homebrew
+# or: ollama serve              # in a separate terminal
+```
 
-## 12. Common Git commands
+**Step 2 — Pull the model:**
+
+```bash
+ollama pull qwen3:4b
+```
+
+**Step 3 — Verify Ollama is running:**
+
+```bash
+curl --fail http://127.0.0.1:11434/api/tags
+ollama list                     # confirm qwen3:4b is listed
+ollama run qwen3:4b "Reply with OK"
+```
+
+**Step 4 — Enable in `.env`:**
+
+```env
+AGENTIC_TESTS_ENABLED=true
+AGENTIC_SELF_HEALING_ENABLED=true
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=qwen3:4b
+```
+
+**Step 5 — Run:**
+
+```bash
+npm run cucumber
+```
+
+### What is and is not implemented
+
+| Capability | Status |
+|---|---|
+| Failure diagnosis | ✅ Active — Ollama receives a bounded summary; output is advisory only |
+| Locator self-healing | ✅ Active — Ollama picks from discovered candidates; requires approval before one retry |
+| Skills / Rules / Memory | 🔧 Foundations built — not yet wired into the Cucumber runtime |
+| Test generation / auto-repair | 🔮 Future work |
+
+---
+
+## 11. Continuous integration
+
+The workflow at `.github/workflows/e2e-tests.yml` triggers on **push**, **pull request**, or **manual dispatch**.
+
+Steps: checkout → Node.js 20 → `npm ci` → install Chromium → `npm run cucumber` → upload reports.
+
+> Add `ENV_SECRET` as a GitHub Actions repository secret before enabling CI.
+> The workflow installs Chromium only — update it if other browsers are needed.
+
+---
+
+## 12. Add or change framework behavior
+
+Follow this layer order when making changes:
+
+1. Add / update the Gherkin scenario in `src/features/`
+2. Add / update step definitions in `src/steps/`
+3. Implement browser actions in a page object in `src/pages/`
+4. Register new page objects in `src/pages/POManager.ts`
+5. Add shared setup/teardown in `support/hooks.ts` only if needed
+6. **Update this README** when commands, config, reports, or workflow behavior changes
+7. Run the smallest relevant test locally and check the report
+
+> Never commit decrypted test data or secrets.
+
+---
+
+## 13. Common Git commands
 
 ```bash
 git status
 git add <files>
-git commit -m "Describe the change"
+git commit -m "feat: describe the change"
 git push
 ```
