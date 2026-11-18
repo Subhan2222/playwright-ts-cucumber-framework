@@ -20,6 +20,8 @@ import './memory-telemetry.test';
 import './pom-capability.test';
 import './pom-page-object.test';
 import './named-agents-skills-memory.test';
+import './locator-recovery.test';
+import './ollama-provider.test';
 
 const policy: AgentPolicy = {
   enabled: true,
@@ -143,6 +145,7 @@ test('Cucumber lifecycle stays inactive without opt-in and sanitizes bounded dia
   let disposed = false;
   await initializeScenarioRuntime(world, true, async () => ({
     diagnoseFailure: async () => ({ status: 'completed', output: 'unused' }),
+    suggestLocatorRecovery: async () => undefined,
     dispose: async () => { disposed = true; },
   }));
   assert.equal(world.agentRuntime !== undefined, true);
@@ -162,6 +165,7 @@ test('Cucumber lifecycle stays inactive without opt-in and sanitizes bounded dia
       diagnosisCalls += 1;
       return { status: 'completed', output: 'read-only note' };
     },
+    suggestLocatorRecovery: async () => undefined,
     dispose: async () => undefined,
   };
   const observation = {

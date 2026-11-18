@@ -8,17 +8,21 @@ import type { ModelProvider } from '../contracts/provider';
 import { parseAgentPolicy } from '../core/policy-loader';
 import { createNamedAgentRegistry } from '../agents/named-agents';
 import { FileMemoryStore } from '../adapters/memory/file-memory-store';
-import { createAccessibilitySkill } from '../skills/accessibility';
-import { createAnalysisSkill, createPlanningSkill } from '../skills/analysis';
-import { createApiSkill } from '../skills/api';
-import { createAuthSkill } from '../skills/auth';
-import { createDatabaseSkill } from '../skills/database';
-import { createFormSkill } from '../skills/form';
-import { createLocatorSkill } from '../skills/locator';
-import { createNavigationSkill } from '../skills/navigation';
-import { createReportingSkill, createTestGenerationSkill } from '../skills/reporting';
-import { createValidationSkill } from '../skills/validation';
-import { createVisualSkill } from '../skills/visual';
+import {
+  createAccessibilitySkill,
+  createAnalysisSkill,
+  createApiSkill,
+  createAuthSkill,
+  createDatabaseSkill,
+  createFormSkill,
+  createLocatorSkill,
+  createNavigationSkill,
+  createPlanningSkill,
+  createReportingSkill,
+  createTestGenerationSkill,
+  createValidationSkill,
+  createVisualSkill,
+} from '../skills/skills';
 
 test('named agents use fixed skill bindings and call a provider only when injected', async () => {
   const registry = createNamedAgentRegistry();
@@ -79,7 +83,7 @@ test('JSON rules example is parsed as disabled and malformed policies fail close
   }), /Invalid agent policy/);
 });
 
-test('skill modules expose fixed read-only wrappers with bounded typed inputs', async () => {
+test('centralized skills expose fixed read-only wrappers with bounded typed inputs', async () => {
   let observed = 0;
   const port = {
     observe: async ({ request }: { request: string }) => {

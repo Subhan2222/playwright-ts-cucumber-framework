@@ -3,6 +3,7 @@ import type { BrowserContext, Page } from 'playwright';
 import type POManager from '../../../pages/POManager';
 import type { AgentResponse } from '../../contracts/agent';
 import type { PomCapability } from '../../contracts/pom-capability';
+import type { LocatorRecoveryRequest } from './locator-recovery';
 
 export interface FailureObservation {
   readonly scenarioName: string;
@@ -13,6 +14,10 @@ export interface FailureObservation {
 
 export interface ScenarioAgentRuntime {
   diagnoseFailure(observation: FailureObservation): Promise<AgentResponse>;
+  suggestLocatorRecovery(
+    request: LocatorRecoveryRequest,
+    signal?: AbortSignal
+  ): Promise<string | undefined>;
   dispose(): Promise<void>;
 }
 
@@ -32,6 +37,7 @@ export interface CucumberWorld extends IWorld {
   pageManager?: POManager;
   scenarioId?: string;
   scenarioName?: string;
+  currentStepText?: string;
   agentRuntime?: ScenarioAgentRuntime;
   agentDiagnosticInvoked?: boolean;
 }

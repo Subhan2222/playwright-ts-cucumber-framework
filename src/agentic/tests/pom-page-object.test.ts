@@ -127,3 +127,31 @@ test('menu-hidden observation requires rendered dashboard menu evidence', async 
   ])));
   assert.equal(await partialDashboardMenu.isMenuHidden(), false);
 });
+
+test('legacy menu-hidden assertion uses the same complete menu observation', async () => {
+  const hiddenAwareQueries: string[] = [];
+  const fakePage = {
+    getByPlaceholder: () => ({ fill: async () => undefined, press: async () => undefined }),
+    locator: () => ({ click: async () => undefined }),
+    getByRole: (_role: string, options: {
+      name: string | RegExp;
+      exact?: boolean;
+      includeHidden?: boolean;
+    }) => {
+      if (typeof options.name === 'string' && options.includeHidden === true) {
+        hiddenAwareQueries.push(options.name);
+      }
+      const isKnownMenuItem =
+        typeof options.name === 'string' && expectedMenuOptions.includes(options.name);
+      return {
+        count: async () => isKnownMenuItem ? 1 : 0,
+        isVisible: async () => false,
+      };
+    },
+  } as unknown as Page;
+  const dashboard = new dashboardPage(fakePage);
+
+  await dashboard.verifyMenuHidden();
+
+  assert.deepEqual(hiddenAwareQueries, expectedMenuOptions);
+});

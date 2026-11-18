@@ -117,6 +117,7 @@ test('runtime factory receives only scenario identifiers and the explicitly supp
   let receivedScope: unknown;
   const runtime: ScenarioAgentRuntime = {
     diagnoseFailure: async () => ({ status: 'completed' }),
+    suggestLocatorRecovery: async () => undefined,
     dispose: async () => undefined,
   };
 
@@ -142,6 +143,7 @@ test('runtime factory receives no POM capability unless it was explicitly suppli
   } as CucumberWorld;
   const runtime: ScenarioAgentRuntime = {
     diagnoseFailure: async () => ({ status: 'completed' }),
+    suggestLocatorRecovery: async () => undefined,
     dispose: async () => undefined,
   };
   let receivedScope: unknown;

@@ -13,6 +13,7 @@ import type { CucumberWorld } from '../src/agentic/integrations/cucumber/world';
 import {
     diagnoseFailureSafely,
     disposeScenarioRuntime,
+    formatAgentDiagnosticReport,
     initializeScenarioRuntime,
 } from '../src/agentic/integrations/cucumber/lifecycle';
 import {
@@ -20,6 +21,8 @@ import {
     pomPolicyFromEnvironment,
 } from '../src/agentic/integrations/cucumber/pom-capability';
 import { createScenarioAgentRuntime } from './agentic-runtime';
+import { createScenarioLocatorRecovery } from './locator-recovery';
+import { createSelfHealingPage } from '../src/agentic/integrations/cucumber/locator-recovery';
 
 setDefaultTimeout(Number(process.env.TIMEOUT ?? 60000));
 dotenv.config();
@@ -50,6 +53,13 @@ Before(async function (this: CucumberWorld, { pickle }: ITestCaseHookParameter) 
     this.scenarioId = pickle.id;
     this.scenarioName = pickle.name;
     const agenticEnabled = process.env.AGENTIC_TESTS_ENABLED?.toLowerCase() === 'true';
+    const selfHealingEnabled =
+        process.env.AGENTIC_SELF_HEALING_ENABLED?.toLowerCase() === 'true';
+    if (selfHealingEnabled && !agenticEnabled) {
+        throw new Error(
+            'AGENTIC_SELF_HEALING_ENABLED requires AGENTIC_TESTS_ENABLED=true because locator recovery uses the agent runtime.'
+        );
+    }
     const pomPolicy = pomPolicyFromEnvironment(
         agenticEnabled && process.env.AGENTIC_POM_CAPABILITIES_ENABLED?.toLowerCase() === 'true',
         process.env.AGENTIC_POM_ALLOWED_ACTIONS
@@ -72,7 +82,10 @@ Before(async function (this: CucumberWorld, { pickle }: ITestCaseHookParameter) 
 
     this.page = await this.context.newPage();
 
-    this.pageManager = new POManager(this.page);
+    const pageForPageObjects = selfHealingEnabled
+        ? createSelfHealingPage(this.page, createScenarioLocatorRecovery(this), () => this.currentStepText ?? '')
+        : this.page;
+    this.pageManager = new POManager(pageForPageObjects);
 });
 
 After(async function (this: CucumberWorld, scenario: ITestCaseHookParameter) {
@@ -118,7 +131,8 @@ After(async function (this: CucumberWorld, scenario: ITestCaseHookParameter) {
     }
 });
 
-BeforeStep(function ({ pickleStep }) {
+BeforeStep(function (this: CucumberWorld, { pickleStep }) {
+    this.currentStepText = pickleStep.text;
     console.log(`[STEP START] ${pickleStep.text}`);
 });
 
@@ -133,20 +147,25 @@ AfterStep(async function (this: CucumberWorld, { pickleStep, result }: ITestStep
 
     if (result.status === Status.FAILED) {
         console.error(`[STEP FAIL] ${pickleStep.text} :: ${cleanMessage}`);
-        const diagnostic = await diagnoseFailureSafely(this, {
+        const observation = {
             scenarioName: this.scenarioName ?? 'Unknown scenario',
             stepText: pickleStep.text,
             errorSummary: cleanMessage,
-        });
+        };
+        const diagnostic = await diagnoseFailureSafely(this, observation);
         if (diagnostic?.status === 'completed' && typeof diagnostic.output === 'string') {
+            const report = formatAgentDiagnosticReport(observation, diagnostic);
+            console.log(`[AGENTIC DIAGNOSIS]\n${report}`);
             try {
-                await this.attach(diagnostic.output.slice(0, 4000), 'text/plain');
+                await this.attach(report, 'text/plain');
             } catch {
                 console.error('[Agentic Runtime] Failed to attach diagnostic output');
             }
         } else if (diagnostic?.message) {
+            const report = formatAgentDiagnosticReport(observation, diagnostic);
+            console.warn(`[AGENTIC DIAGNOSTIC]\n${report}`);
             try {
-                await this.attach(diagnostic.message.slice(0, 4000), 'text/plain');
+                await this.attach(report, 'text/plain');
             } catch {
                 console.error('[Agentic Runtime] Failed to attach diagnostic result');
             }
