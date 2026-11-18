@@ -1,7 +1,6 @@
-name: Smoke tests
+name: Playwright Cucumber Smoke Tests
 
 on:
-  push:
   pull_request:
   workflow_dispatch:
 
@@ -26,6 +25,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check required environment secret
+        env:
+          ENV_SECRET: ${{ secrets.ENV_SECRET }}
+        run: |
+          if [ -z "$ENV_SECRET" ]; then
+            echo "::error::Add the required ENV_SECRET in repository Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
@@ -33,12 +41,13 @@ jobs:
         run: npm run smoke
         env:
           ENV_SECRET: ${{ secrets.ENV_SECRET }}
+          USER_SECRET: ${{ secrets.USER_SECRET || secrets.ENV_SECRET }}
 
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cucumber-test-reports
+          name: smoke-test-reports
           path: |
             test-results/reports/
             test-results/allure-results/
