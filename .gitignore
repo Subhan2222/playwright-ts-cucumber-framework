@@ -2,6 +2,7 @@ node_modules/
 .env
 .tmp/
 data/envData/envUrls.json
+data/userData/userData.json
 
 # Test reports and results
 reports/

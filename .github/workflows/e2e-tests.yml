@@ -1,0 +1,54 @@
+name: Playwright Cucumber Smoke Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check required environment secret
+        env:
+          ENV_SECRET: ${{ secrets.ENV_SECRET }}
+        run: |
+          if [ -z "$ENV_SECRET" ]; then
+            echo "::error::Add the required ENV_SECRET in repository Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        run: npm run smoke
+        env:
+          ENV_SECRET: ${{ secrets.ENV_SECRET }}
+          USER_SECRET: ${{ secrets.USER_SECRET || secrets.ENV_SECRET }}
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-reports
+          path: |
+            test-results/reports/
+            test-results/allure-results/
+          if-no-files-found: warn
