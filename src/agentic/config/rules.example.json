@@ -1,0 +1,9 @@
+{
+  "enabled": false,
+  "allowedAgentIds": [],
+  "allowedSkillIds": [],
+  "allowedSideEffects": ["read"],
+  "maxCallsPerRun": 3,
+  "timeoutMs": 5000,
+  "maxInputChars": 2000
+}
