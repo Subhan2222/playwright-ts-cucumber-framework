@@ -102,6 +102,7 @@ playwright-ts-cucumber-framework/
 ```
 
 > `npm run cucumber` uses `cucumber.json` — it loads `support/hooks.ts` and all `src/steps/**/*.ts`, then runs all features under `src/features/**/*.feature`.
+> GitHub Actions uses `cucumber.ci.json`, which omits `paths`; Cucumber v13 merges CLI paths with configured paths, so the default glob would otherwise cause every shard to run every feature.
 
 ---
 
@@ -110,9 +111,10 @@ playwright-ts-cucumber-framework/
 | File | Purpose | Active? |
 |---|---|---|
 | `cucumber.json` | Cucumber hooks, steps, feature paths, TypeScript support, report formatters | ✅ Yes — used by `npm run cucumber` |
+| `cucumber.ci.json` | Cucumber runtime and reporters without a default feature glob, so CI shard paths run alone | ✅ Yes — used by GitHub Actions |
 | `config/cucumber.config.ts` | TypeScript-formatted alternative Cucumber config | ❌ No — not wired into npm scripts |
 | `config/playwright.config.ts` | Settings for the native Playwright Test runner | ❌ No — current scripts use Cucumber |
-| `support/hooks.ts` | Browser launch/teardown, tracing, failure artifacts | ✅ Yes — loaded by `cucumber.json` |
+| `support/hooks.ts` | Browser launch/teardown, tracing, failure artifacts | ✅ Yes — loaded by both Cucumber configs |
 | `tsconfig.json` | Strict type checking, ES2020 target, CommonJS output | ✅ Yes — used by TypeScript and `ts-node` |
 
 ### `cucumber.json` — active Cucumber setup

@@ -146,7 +146,7 @@ jobs:
             printf '  - \`%s\`\n' "${shard_features[@]}"
           } >> "$GITHUB_STEP_SUMMARY"
 
-          npm run cucumber -- "${shard_features[@]}" "${test_options[@]}"
+          npm run cucumber -- --config cucumber.ci.json "${shard_features[@]}" "${test_options[@]}"
         env:
           ENV_SECRET: ${{ secrets.ENV_SECRET }}
           USER_SECRET: ${{ secrets.USER_SECRET || secrets.ENV_SECRET }}
