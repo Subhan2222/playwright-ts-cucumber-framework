@@ -8,6 +8,7 @@
     "test": "ts-node src/agentic/tests/foundation.test.ts",
     "smoke": "npm run cucumber -- --tags @smoke",
     "regression": "npm run cucumber -- --tags @regression",
+    "pre-cucumber": "ts-node ./utils/scripts/clean-test-reports.ts",
     "cucumber": "cucumber-js",
     "cucumber:secure": "node ./utils/scripts/run-cucumber-secure.js",
     "report": "ts-node ./utils/scripts/generate-cucumber-report.ts",
@@ -20,7 +21,7 @@
     "test:chromium": "BROWSER=chromium npm run cucumber",
     "test:firefox": "BROWSER=firefox npm run cucumber",
     "test:webkit": "BROWSER=webkit npm run cucumber",
-    "test:cross-browser": "npm run test:chromium && npm run test:firefox && npm run test:webkit"
+    "test:cross-browser": "npm run test:chromium && PRESERVE_ALLURE_RESULTS=true npm run test:firefox && PRESERVE_ALLURE_RESULTS=true npm run test:webkit"
   },
   "repository": {
     "type": "git",

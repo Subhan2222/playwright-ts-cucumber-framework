@@ -308,6 +308,7 @@ After a run, these files are generated:
 | Cucumber HTML report | `test-results/reports/cucumber-report.html` |
 | Cucumber JSON report | `test-results/reports/cucumber-report.json` |
 | Allure results | `test-results/allure-results/` |
+| Allure HTML report | `test-results/allure-report/` (via `npm run allure:generate`) |
 | Extended HTML report | `test-results/reports/cucumber-extended-report.html` (via `npm run report`) |
 
 ```bash
@@ -318,6 +319,7 @@ npm run allure:open
 
 > Failed scenarios automatically attach: **error message · screenshot · Playwright trace**.
 > When agentic is enabled, an `AGENTIC FAILURE ANALYSIS` block is also attached.
+> A normal Cucumber run clears previous report files first. The cross-browser script preserves raw Allure results between its browser runs.
 
 ---
 
@@ -381,12 +383,11 @@ npm run cucumber
 
 ## 11. Continuous integration
 
-The workflow at `.github/workflows/e2e-tests.yml` triggers on **push**, **pull request**, or **manual dispatch**.
+The workflow at `.github/workflows/e2e-tests.yml` runs smoke tests on **pull requests** using Chromium. For a manual dispatch, choose the suite (smoke, regression, or all), browser (including cross-browser), and shard count.
 
-Steps: checkout → Node.js 20 → `npm ci` → install Chromium → `npm run cucumber` → upload reports.
+The workflow first installs dependencies and warms the npm cache, then starts the browser/shard test matrix. Each matrix runner still runs `npm ci` on its own VM because GitHub jobs do not share `node_modules`. Job names show the suite and shard position; each job also lists its assigned feature files in the Actions log and job summary. PRs currently create three Chromium shard jobs. The aggregate job combines the results and uploads separate `cucumber-report` and `allure-report` artifacts.
 
 > Add `ENV_SECRET` as a GitHub Actions repository secret before enabling CI.
-> The workflow installs Chromium only — update it if other browsers are needed.
 
 ---
 

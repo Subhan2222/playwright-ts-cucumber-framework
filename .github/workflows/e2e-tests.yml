@@ -1,4 +1,4 @@
-name: Playwright Cucumber Cross-Browser Tests
+name: Playwright TypeScript Cucumber E2E Tests
 
 on:
   pull_request:
@@ -37,14 +37,31 @@ permissions:
   contents: read
 
 jobs:
-  browser_tests:
-    name: Cucumber tests (${{ matrix.browser }}, shard ${{ matrix.shard }})
+  install_dependencies:
+    name: Install dependencies
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+  ci_matrix:
+    name: Cucumber ${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'smoke' }} (${{ matrix.browser }}, shard ${{ matrix.shard }}/${{ github.event_name == 'workflow_dispatch' && inputs.vm_count || '3' }})
+    needs: install_dependencies
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        browser: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.browser != 'cross-browser' && format('["{0}"]', inputs.browser) || '["chromium","firefox","webkit"]') }}
+        browser: ${{ fromJSON(github.event_name == 'pull_request' && '["chromium"]' || github.event_name == 'workflow_dispatch' && inputs.browser != 'cross-browser' && format('["{0}"]', inputs.browser) || '["chromium","firefox","webkit"]') }}
         shard: ${{ fromJSON(inputs.vm_count == '1' && '[1]' || inputs.vm_count == '2' && '[1,2]' || '[1,2,3]') }}
 
     steps:
@@ -112,6 +129,23 @@ jobs:
               ;;
           esac
 
+          echo "::group::Matrix assignment"
+          echo "Browser: $BROWSER"
+          echo "Suite: $TEST_SUITE"
+          echo "Shard: $SHARD_INDEX/$SHARD_COUNT"
+          printf 'Feature: %s\n' "${shard_features[@]}"
+          echo "::endgroup::"
+
+          {
+            echo "## Matrix assignment"
+            echo ""
+            echo "- **Browser:** \`$BROWSER\`"
+            echo "- **Suite:** \`$TEST_SUITE\`"
+            echo "- **Shard:** \`$SHARD_INDEX/$SHARD_COUNT\`"
+            echo "- **Feature files:**"
+            printf '  - \`%s\`\n' "${shard_features[@]}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
           npm run cucumber -- "${shard_features[@]}" "${test_options[@]}"
         env:
           ENV_SECRET: ${{ secrets.ENV_SECRET }}
@@ -133,8 +167,8 @@ jobs:
 
   aggregate_reports:
     name: Aggregate test reports
-    if: always()
-    needs: browser_tests
+    if: always() && needs.ci_matrix.result != 'skipped'
+    needs: ci_matrix
     runs-on: ubuntu-22.04
 
     steps:
@@ -163,20 +197,28 @@ jobs:
       - name: Generate combined Cucumber HTML report
         run: npm run report
         env:
-          BROWSER: ${{ github.event_name == 'workflow_dispatch' && inputs.browser || 'cross-browser' }}
+          BROWSER: ${{ github.event_name == 'pull_request' && 'chromium' || github.event_name == 'workflow_dispatch' && inputs.browser || 'cross-browser' }}
           TEST_ENV: GitHub Actions
 
       - name: Generate combined Allure HTML report
         run: npm run allure:generate
 
-      - name: Upload combined reports
+      - name: Upload Cucumber report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: combined-cucumber-allure-reports
+          name: cucumber-report
           path: |
             test-results/reports/cucumber-report.json
             test-results/reports/cucumber-extended-report.html
+          if-no-files-found: warn
+
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: |
             test-results/allure-results/
             test-results/allure-report/
           if-no-files-found: warn
