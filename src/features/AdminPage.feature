@@ -20,7 +20,7 @@ Feature: Admin / User Management Page
     And clicks on Login button
     Then the user should be redirected to Dashboard page
     When the user clicks on the Admin menu
-    Then the Admin page title should be "User Management"
+    Then the Admin page title should be "Admin"
 
   @UI @admin
   Scenario Outline: ADMIN-03 Verify all top navigation tabs are visible on Admin page

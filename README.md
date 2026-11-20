@@ -102,6 +102,7 @@ playwright-ts-cucumber-framework/
 ```
 
 > `npm run cucumber` uses `cucumber.json` — it loads `support/hooks.ts` and all `src/steps/**/*.ts`, then runs all features under `src/features/**/*.feature`.
+> GitHub Actions uses `cucumber.ci.json`, which omits `paths`; Cucumber v13 merges CLI paths with configured paths, so the default glob would otherwise cause every shard to run every feature.
 
 ---
 
@@ -110,9 +111,10 @@ playwright-ts-cucumber-framework/
 | File | Purpose | Active? |
 |---|---|---|
 | `cucumber.json` | Cucumber hooks, steps, feature paths, TypeScript support, report formatters | ✅ Yes — used by `npm run cucumber` |
+| `cucumber.ci.json` | Cucumber runtime and reporters without a default feature glob, so CI shard paths run alone | ✅ Yes — used by GitHub Actions |
 | `config/cucumber.config.ts` | TypeScript-formatted alternative Cucumber config | ❌ No — not wired into npm scripts |
 | `config/playwright.config.ts` | Settings for the native Playwright Test runner | ❌ No — current scripts use Cucumber |
-| `support/hooks.ts` | Browser launch/teardown, tracing, failure artifacts | ✅ Yes — loaded by `cucumber.json` |
+| `support/hooks.ts` | Browser launch/teardown, tracing, failure artifacts | ✅ Yes — loaded by both Cucumber configs |
 | `tsconfig.json` | Strict type checking, ES2020 target, CommonJS output | ✅ Yes — used by TypeScript and `ts-node` |
 
 ### `cucumber.json` — active Cucumber setup
@@ -308,6 +310,7 @@ After a run, these files are generated:
 | Cucumber HTML report | `test-results/reports/cucumber-report.html` |
 | Cucumber JSON report | `test-results/reports/cucumber-report.json` |
 | Allure results | `test-results/allure-results/` |
+| Allure HTML report | `test-results/allure-report/` (via `npm run allure:generate`) |
 | Extended HTML report | `test-results/reports/cucumber-extended-report.html` (via `npm run report`) |
 
 ```bash
@@ -318,6 +321,7 @@ npm run allure:open
 
 > Failed scenarios automatically attach: **error message · screenshot · Playwright trace**.
 > When agentic is enabled, an `AGENTIC FAILURE ANALYSIS` block is also attached.
+> A normal Cucumber run clears previous report files first. The cross-browser script preserves raw Allure results between its browser runs.
 
 ---
 
@@ -381,12 +385,11 @@ npm run cucumber
 
 ## 11. Continuous integration
 
-The workflow at `.github/workflows/e2e-tests.yml` triggers on **push**, **pull request**, or **manual dispatch**.
+The workflow at `.github/workflows/e2e-tests.yml` runs smoke tests on **pull requests** using Chromium. For a manual dispatch, choose the suite (smoke, regression, or all), browser (including cross-browser), and shard count.
 
-Steps: checkout → Node.js 20 → `npm ci` → install Chromium → `npm run cucumber` → upload reports.
+The workflow first installs dependencies and warms the npm cache, then starts the browser/shard test matrix. Each matrix runner still runs `npm ci` on its own VM because GitHub jobs do not share `node_modules`. Job names show the suite and shard position; each job also lists its assigned feature files in the Actions log and job summary. PRs currently create three Chromium shard jobs. The aggregate job combines the results and uploads separate `cucumber-report` and `allure-report` artifacts.
 
 > Add `ENV_SECRET` as a GitHub Actions repository secret before enabling CI.
-> The workflow installs Chromium only — update it if other browsers are needed.
 
 ---
 

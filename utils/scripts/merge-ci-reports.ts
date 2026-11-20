@@ -4,6 +4,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  rmSync,
   writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
@@ -31,6 +32,8 @@ if (artifactNames.length === 0) {
   throw new Error('No browser/shard report artifacts were downloaded.');
 }
 
+rmSync(cucumberOutput, { recursive: true, force: true });
+rmSync(allureOutput, { recursive: true, force: true });
 mkdirSync(cucumberOutput, { recursive: true });
 mkdirSync(allureOutput, { recursive: true });
 
